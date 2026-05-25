@@ -1,0 +1,41 @@
+{
+  "name": "possydeadlock",
+  "version": "1.0.0",
+  "description": "",
+  "homepage": "https://github.com/TyostoKarry/PossyDeadlock#readme",
+  "bugs": {
+    "url": "https://github.com/TyostoKarry/PossyDeadlock/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TyostoKarry/PossyDeadlock.git"
+  },
+  "license": "MIT",
+  "author": "TyostoKarry",
+  "type": "module",
+  "main": "index.js",
+  "engines": {
+    "node": ">=24.14.1",
+    "npm": ">=11.10.0"
+  },
+  "scripts": {
+    "dev": "ts-node --esm src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "lint": "eslint src/**/*.ts",
+    "format": "prettier --write src/**/*.ts"
+  },
+  "dependencies": {
+    "discord.js": "^14.26.4"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@types/node": "^25.9.1",
+    "eslint": "^10.4.0",
+    "eslint-config-prettier": "^10.1.8",
+    "prettier": "^3.8.3",
+    "ts-node": "^10.9.2",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.59.4"
+  }
+}
