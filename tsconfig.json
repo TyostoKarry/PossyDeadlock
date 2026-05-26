@@ -2,6 +2,7 @@
   "compilerOptions": {
     "rootDir": "./src",
     "outDir": "./dist",
+    "declarationDir": "./dist/types",
 
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
