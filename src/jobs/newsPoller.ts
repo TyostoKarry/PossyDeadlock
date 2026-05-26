@@ -8,8 +8,9 @@ const OFFICIAL_FEED = 'steam_community_announcements';
 
 const isValidUrl = (url: string): boolean => {
     try {
-        const parsed = new URL(url);
-        return !url.includes(' ') && (parsed.protocol === 'http:' || parsed.protocol === 'https:');
+        const encoded = encodeURI(url);
+        const parsed = new URL(encoded);
+        return parsed.protocol === 'http:' || parsed.protocol === 'https:';
     } catch {
         return false;
     }
@@ -59,8 +60,9 @@ const poll = async (client: Client<true>): Promise<void> => {
                     .setTimestamp(post.date * 1000)
                     .setColor(0x00b4d8);
 
-                if (isValidUrl(post.url)) {
-                    embed.setURL(post.url);
+                const postUrl = encodeURI(post.url);
+                if (isValidUrl(postUrl)) {
+                    embed.setURL(postUrl);
                 }
 
                 try {
