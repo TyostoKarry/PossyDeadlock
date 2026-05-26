@@ -8,6 +8,7 @@ export interface SteamNewsPost {
     author: string;
     contents: string;
     date: number;
+    feedname: string;
 }
 
 interface SteamNewsResponse {

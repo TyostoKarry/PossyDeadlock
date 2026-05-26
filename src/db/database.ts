@@ -13,7 +13,8 @@ const db = new DatabaseSync(dbPath);
 db.exec(`
   CREATE TABLE IF NOT EXISTS config (
     guild_id TEXT PRIMARY KEY,
-    channel_id TEXT NOT NULL
+    channel_id TEXT NOT NULL,
+    news_mode TEXT NOT NULL DEFAULT 'official'
   );
 
   CREATE TABLE IF NOT EXISTS seen_posts (
@@ -38,6 +39,21 @@ export const setNewsChannel = (guildId: string, channelId: string): void => {
     ON CONFLICT(guild_id) DO UPDATE SET channel_id = excluded.channel_id
   `,
     ).run(guildId, channelId);
+};
+
+export const getNewsMode = (guildId: string): string => {
+    const row = db.prepare('SELECT news_mode FROM config WHERE guild_id = ?').get(guildId) as
+        | { news_mode: string }
+        | undefined;
+    return row?.news_mode ?? 'official';
+};
+
+export const setNewsMode = (guildId: string, mode: string): void => {
+    db.prepare(
+        `
+    UPDATE config SET news_mode = ? WHERE guild_id = ?
+  `,
+    ).run(mode, guildId);
 };
 
 export const isPostSeen = (postId: string): boolean => {

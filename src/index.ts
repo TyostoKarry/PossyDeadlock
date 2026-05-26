@@ -21,7 +21,8 @@ const client = new Client({ intents: [GatewayIntentBits.Guilds] });
 client.commands = new Collection();
 
 const commandsPath = join(__dirname, 'commands');
-const commandFiles = readdirSync(commandsPath).filter((file) => file.endsWith('.ts'));
+const ext = import.meta.url.endsWith('.ts') ? '.ts' : '.js';
+const commandFiles = readdirSync(commandsPath).filter((file) => file.endsWith(ext));
 
 for (const file of commandFiles) {
   const module = await import(join(commandsPath, file));

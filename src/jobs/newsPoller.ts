@@ -1,24 +1,32 @@
 import cron from 'node-cron';
 import { Client, EmbedBuilder, TextChannel } from 'discord.js';
 import { fetchDeadlockNews } from '../utils/steamApi.js';
-import { getNewsChannel, isPostSeen, markPostSeen } from '../db/database.js';
+import { getNewsChannel, getNewsMode, isPostSeen, markPostSeen } from '../db/database.js';
 import { logger } from '../utils/logger.js';
 
+const OFFICIAL_FEED = 'steam_community_announcements';
+
 const isValidUrl = (url: string): boolean => {
-  try {
-    const parsed = new URL(url);
-    return !url.includes(' ') && (parsed.protocol === 'http:' || parsed.protocol === 'https:');
-  } catch {
-    return false;
-  }
+    try {
+        const parsed = new URL(url);
+        return !url.includes(' ') && (parsed.protocol === 'http:' || parsed.protocol === 'https:');
+    } catch {
+        return false;
+    }
 };
 
 const stripHtml = (text: string): string => {
-  return text
-    .replace(/<[^>]*>/g, '') // remove HTML tags
-    .replace(/\{STEAM_CLAN_IMAGE\}[^\s]*/g, '') // remove Steam image macros
-    .replace(/\[.*?\]/g, '') // remove BBCode tags
-    .trim();
+    return text
+        .replace(/\[p\]/gi, '\n')
+        .replace(/\[\/p\]/gi, '')
+        .replace(/\[b\]|\[\/b\]/gi, '')
+        .replace(/\[u\]|\[\/u\]/gi, '')
+        .replace(/<[^>]*>/g, '')
+        .replace(/\{STEAM_CLAN_IMAGE\}[^\s]*/g, '')
+        .replace(/\[.*?\]/g, '')
+        .replace(/\\(?=\[|\s)/g, '')
+        .replace(/\n{3,}/g, '\n\n')
+        .trim();
 };
 
 const poll = async (client: Client<true>): Promise<void> => {
@@ -33,7 +41,11 @@ const poll = async (client: Client<true>): Promise<void> => {
             const channel = await client.channels.fetch(channelID);
             if (!(channel instanceof TextChannel)) continue;
 
-            for (const post of posts) {
+            const mode = getNewsMode(guild.id);
+            const filteredPosts =
+                mode === 'official' ? posts.filter((p) => p.feedname === OFFICIAL_FEED) : posts;
+
+            for (const post of filteredPosts) {
                 if (isPostSeen(post.gid)) continue;
 
                 logger.info(`Attempting to post: "${post.title}" [${post.gid}]`);
@@ -50,7 +62,7 @@ const poll = async (client: Client<true>): Promise<void> => {
                 if (isValidUrl(post.url)) {
                     embed.setURL(post.url);
                 }
-                
+
                 try {
                     await channel.send({ embeds: [embed] });
                     logger.info(`Posted: "${post.title}" [${post.gid}]`);

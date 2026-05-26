@@ -5,6 +5,7 @@ import {
     TextChannel,
 } from 'discord.js';
 import { setNewsChannel } from '../db/database.js';
+import { logger } from '../utils/logger.js';
 
 export default {
     data: new SlashCommandBuilder()
@@ -30,6 +31,9 @@ export default {
         }
 
         setNewsChannel(interaction.guildId!, channel.id);
+        logger.info(
+            `[${interaction.guildId}] ${interaction.user.tag} set news channel to #${channel.name}`,
+        );
 
         await interaction.reply({
             content: `Deadlock news will now be posted in <#${channel.id}>`,
