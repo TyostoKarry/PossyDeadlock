@@ -1,34 +1,9 @@
 import cron from 'node-cron';
 import { Client, EmbedBuilder, TextChannel } from 'discord.js';
-import { fetchDeadlockNews } from '../utils/steamApi.js';
+import { fetchDeadlockNews, OFFICIAL_FEED } from '../utils/steamApi.js';
 import { getNewsChannel, getNewsMode, isPostSeen, markPostSeen } from '../db/database.js';
 import { logger } from '../utils/logger.js';
-
-const OFFICIAL_FEED = 'steam_community_announcements';
-
-const isValidUrl = (url: string): boolean => {
-    try {
-        const encoded = encodeURI(url);
-        const parsed = new URL(encoded);
-        return parsed.protocol === 'http:' || parsed.protocol === 'https:';
-    } catch {
-        return false;
-    }
-};
-
-const stripHtml = (text: string): string => {
-    return text
-        .replace(/\[p\]/gi, '\n')
-        .replace(/\[\/p\]/gi, '')
-        .replace(/\[b\]|\[\/b\]/gi, '')
-        .replace(/\[u\]|\[\/u\]/gi, '')
-        .replace(/<[^>]*>/g, '')
-        .replace(/\{STEAM_CLAN_IMAGE\}[^\s]*/g, '')
-        .replace(/\[.*?\]/g, '')
-        .replace(/\\(?=\[|\s)/g, '')
-        .replace(/\n{3,}/g, '\n\n')
-        .trim();
-};
+import { encodePostUrl, stripHtml } from '../utils/formatUtils.js';
 
 const poll = async (client: Client<true>): Promise<void> => {
     logger.info('Polling for news...');
@@ -60,10 +35,8 @@ const poll = async (client: Client<true>): Promise<void> => {
                     .setTimestamp(post.date * 1000)
                     .setColor(0x00b4d8);
 
-                const postUrl = encodeURI(post.url);
-                if (isValidUrl(postUrl)) {
-                    embed.setURL(postUrl);
-                }
+                const url = encodePostUrl(post.url);
+                if (url) embed.setURL(url);
 
                 try {
                     await channel.send({ embeds: [embed] });

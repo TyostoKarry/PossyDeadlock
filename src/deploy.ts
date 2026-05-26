@@ -1,6 +1,7 @@
 import { REST, Routes } from 'discord.js';
 import setNewsChannel from './commands/setNewsChannel.js';
 import setNewsMode from './commands/setNewsMode.js';
+import lastNewsPost from './commands/lastNewsPost.js';
 
 const token = process.env.DISCORD_TOKEN;
 const clientId = process.env.CLIENT_ID;
@@ -13,7 +14,7 @@ const rest = new REST().setToken(token);
 
 await rest.put(
   Routes.applicationCommands(clientId),
-  { body: [setNewsChannel.data.toJSON(), setNewsMode.data.toJSON()] },
+  { body: [setNewsChannel.data.toJSON(), setNewsMode.data.toJSON(), lastNewsPost.data.toJSON()] },
 );
 
 console.log('Commands registered!');

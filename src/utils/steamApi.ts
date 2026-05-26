@@ -1,6 +1,8 @@
 const DEADLOCK_APP_ID = '1422450';
 const STEAM_NEWS_URL = `https://api.steampowered.com/ISteamNews/GetNewsForApp/v2/?appid=${DEADLOCK_APP_ID}&count=10&format=json`;
 
+export const OFFICIAL_FEED = 'steam_community_announcements';
+
 export interface SteamNewsPost {
     gid: string;
     title: string;
