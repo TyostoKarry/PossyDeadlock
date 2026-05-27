@@ -4,7 +4,7 @@ import {
     SlashCommandBuilder,
     TextChannel,
 } from 'discord.js';
-import { setNewsChannel } from '../db/database.js';
+import { clearNewsChannel, setNewsChannel } from '../db/database.js';
 import { logger } from '../utils/logger.js';
 
 export default {
@@ -14,13 +14,23 @@ export default {
         .addChannelOption((option) =>
             option
                 .setName('channel')
-                .setDescription('The channel to post news in')
-                .setRequired(true),
+                .setDescription('The channel to post news in — leave empty to disable')
+                .setRequired(false),
         )
         .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild),
 
     execute: async (interaction: ChatInputCommandInteraction): Promise<void> => {
-        const channel = interaction.options.getChannel('channel', true);
+        const channel = interaction.options.getChannel('channel');
+
+        if (!channel) {
+            clearNewsChannel(interaction.guildId!);
+            logger.info(`[${interaction.guildId}] ${interaction.user.tag} cleared news channel`);
+            await interaction.reply({
+                content: 'News channel cleared — bot will no longer post Deadlock news.',
+                ephemeral: true,
+            });
+            return;
+        }
 
         if (!(channel instanceof TextChannel)) {
             await interaction.reply({

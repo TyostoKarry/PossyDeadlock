@@ -13,7 +13,7 @@ const db = new DatabaseSync(dbPath);
 db.exec(`
   CREATE TABLE IF NOT EXISTS config (
     guild_id TEXT PRIMARY KEY,
-    channel_id TEXT NOT NULL,
+    channel_id TEXT,
     news_mode TEXT NOT NULL DEFAULT 'official',
     role_id TEXT
   );
@@ -35,11 +35,15 @@ export const getNewsChannel = (guildId: string): string | null => {
 export const setNewsChannel = (guildId: string, channelId: string): void => {
     db.prepare(
         `
-    INSERT INTO config (guild_id, channel_id)
-    VALUES (?, ?)
-    ON CONFLICT(guild_id) DO UPDATE SET channel_id = excluded.channel_id
-  `,
+        INSERT INTO config (guild_id, channel_id)
+        VALUES (?, ?)
+        ON CONFLICT(guild_id) DO UPDATE SET channel_id = excluded.channel_id
+    `,
     ).run(guildId, channelId);
+};
+
+export const clearNewsChannel = (guildId: string): void => {
+    db.prepare('UPDATE config SET channel_id = NULL WHERE guild_id = ?').run(guildId);
 };
 
 export const getNewsMode = (guildId: string): string => {
@@ -50,11 +54,7 @@ export const getNewsMode = (guildId: string): string => {
 };
 
 export const setNewsMode = (guildId: string, mode: string): void => {
-    db.prepare(
-        `
-    UPDATE config SET news_mode = ? WHERE guild_id = ?
-  `,
-    ).run(mode, guildId);
+    db.prepare(`UPDATE config SET news_mode = ? WHERE guild_id = ?`).run(mode, guildId);
 };
 
 export const getPingRole = (guildId: string): string | null => {
