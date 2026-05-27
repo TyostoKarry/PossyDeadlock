@@ -24,3 +24,41 @@ export const stripHtml = (text: string): string => {
         .replace(/\n{3,}/g, '\n\n')
         .trim();
 };
+
+export const splitIntoSections = (text: string): string[] => {
+    // Replace section headers with placeholders before any stripping
+    const headerRegex = /\\?\[ ([A-Z][A-Za-z &]+) \]/g;
+    const withPlaceholders = text.replace(headerRegex, '\n%%SECTION%%$1%%SECTION%%\n');
+
+    const parts = withPlaceholders.split(/(?=\n%%SECTION%%)/).filter((s) => s.trim().length > 0);
+
+    const chunks: string[] = [];
+
+    for (const part of parts) {
+        // Restore header formatting after stripping
+        const cleaned = stripHtml(part)
+            .replace(/%%SECTION%%([^%]+)%%SECTION%%/g, '[ $1 ]')
+            .trim();
+
+        if (!cleaned) continue;
+
+        // If a single section somehow exceeds discord's 2000 character limit, split it further
+        if (cleaned.length <= 2000) {
+            chunks.push(cleaned);
+        } else {
+            const lines = cleaned.split('\n');
+            let current = '';
+            for (const line of lines) {
+                if ((current + '\n' + line).length > 2000) {
+                    if (current) chunks.push(current.trim());
+                    current = line;
+                } else {
+                    current = current ? current + '\n' + line : line;
+                }
+            }
+            if (current) chunks.push(current.trim());
+        }
+    }
+
+    return chunks.length > 0 ? chunks : [stripHtml(text).slice(0, 2000)];
+};

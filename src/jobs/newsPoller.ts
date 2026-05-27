@@ -9,7 +9,7 @@ import {
     markPostSeen,
 } from '../db/database.js';
 import { logger } from '../utils/logger.js';
-import { encodePostUrl, stripHtml } from '../utils/formatUtils.js';
+import { encodePostUrl, splitIntoSections, stripHtml } from '../utils/formatUtils.js';
 
 const poll = async (client: Client<true>): Promise<void> => {
     logger.info('Polling for news...');
@@ -46,11 +46,27 @@ const poll = async (client: Client<true>): Promise<void> => {
                 if (url) embed.setURL(url);
 
                 try {
-                    await channel.send({
+                    const message = await channel.send({
                         ...(roleId ? { content: `<@&${roleId}>` } : {}),
                         embeds: [embed],
                     });
                     logger.info(`Posted: "${post.title}" [${post.gid}]`);
+
+                    if (post.feedname === OFFICIAL_FEED) {
+                        const sections = splitIntoSections(post.contents);
+                        const thread = await message.startThread({
+                            name: post.title.slice(0, 100),
+                            autoArchiveDuration: 1440, // 24 hours
+                        });
+
+                        for (const section of sections) {
+                            await thread.send(section);
+                        }
+
+                        logger.info(
+                            `Created thread for: "${post.title}" with ${sections.length} section(s)`,
+                        );
+                    }
                 } catch (error) {
                     logger.error(`Failed to post: "${post.title}" [${post.gid}]`, error);
                 }
