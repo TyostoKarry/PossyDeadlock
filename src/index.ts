@@ -1,5 +1,5 @@
 import { Client, Events, GatewayIntentBits, Collection } from 'discord.js';
-import { readdirSync } from 'fs';
+import { readdirSync, statSync } from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import { logger } from './utils/logger.js';
@@ -22,16 +22,28 @@ client.commands = new Collection();
 
 const commandsPath = join(__dirname, 'commands');
 const ext = import.meta.url.endsWith('.ts') ? '.ts' : '.js';
-const commandFiles = readdirSync(commandsPath).filter((file) => file.endsWith(ext));
 
-for (const file of commandFiles) {
-  const module = await import(join(commandsPath, file));
-  const command = module.default;
-  if (!command?.data?.name) {
-    logger.warn(`Skipping invalid command file: ${file}`);
-    continue;
-  }
-  client.commands.set(command.data.name, command);
+const entries = readdirSync(commandsPath);
+
+for (const entry of entries) {
+    const entryPath = join(commandsPath, entry);
+    const isDir = statSync(entryPath).isDirectory();
+
+    const modulePath = isDir
+        ? join(entryPath, `index${ext}`)
+        : entryPath;
+
+    if (!isDir && !entry.endsWith(ext)) continue;
+
+    const module = await import(modulePath);
+    const command = module.default;
+
+    if (!command?.data?.name) {
+        logger.warn(`Skipping invalid command: ${entry}`);
+        continue;
+    }
+
+    client.commands.set(command.data.name, command);
 }
 
 client.on(Events.InteractionCreate, async (interaction) => {
