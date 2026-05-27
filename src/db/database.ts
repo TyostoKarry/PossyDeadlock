@@ -14,7 +14,8 @@ db.exec(`
   CREATE TABLE IF NOT EXISTS config (
     guild_id TEXT PRIMARY KEY,
     channel_id TEXT NOT NULL,
-    news_mode TEXT NOT NULL DEFAULT 'official'
+    news_mode TEXT NOT NULL DEFAULT 'official',
+    role_id TEXT
   );
 
   CREATE TABLE IF NOT EXISTS seen_posts (
@@ -54,6 +55,17 @@ export const setNewsMode = (guildId: string, mode: string): void => {
     UPDATE config SET news_mode = ? WHERE guild_id = ?
   `,
     ).run(mode, guildId);
+};
+
+export const getPingRole = (guildId: string): string | null => {
+    const row = db.prepare('SELECT role_id FROM config WHERE guild_id = ?').get(guildId) as
+        | { role_id: string | null }
+        | undefined;
+    return row?.role_id ?? null;
+};
+
+export const setPingRole = (guildId: string, roleId: string | null): void => {
+    db.prepare('UPDATE config SET role_id = ? WHERE guild_id = ?').run(roleId, guildId);
 };
 
 export const isPostSeen = (postId: string): boolean => {

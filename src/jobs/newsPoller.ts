@@ -1,7 +1,13 @@
 import cron from 'node-cron';
 import { Client, EmbedBuilder, TextChannel } from 'discord.js';
 import { fetchDeadlockNews, OFFICIAL_FEED } from '../utils/steamApi.js';
-import { getNewsChannel, getNewsMode, isPostSeen, markPostSeen } from '../db/database.js';
+import {
+    getNewsChannel,
+    getNewsMode,
+    getPingRole,
+    isPostSeen,
+    markPostSeen,
+} from '../db/database.js';
 import { logger } from '../utils/logger.js';
 import { encodePostUrl, stripHtml } from '../utils/formatUtils.js';
 
@@ -18,6 +24,7 @@ const poll = async (client: Client<true>): Promise<void> => {
             if (!(channel instanceof TextChannel)) continue;
 
             const mode = getNewsMode(guild.id);
+            const roleId = getPingRole(guild.id);
             const filteredPosts =
                 mode === 'official' ? posts.filter((p) => p.feedname === OFFICIAL_FEED) : posts;
 
@@ -39,7 +46,10 @@ const poll = async (client: Client<true>): Promise<void> => {
                 if (url) embed.setURL(url);
 
                 try {
-                    await channel.send({ embeds: [embed] });
+                    await channel.send({
+                        ...(roleId ? { content: `<@&${roleId}>` } : {}),
+                        embeds: [embed],
+                    });
                     logger.info(`Posted: "${post.title}" [${post.gid}]`);
                 } catch (error) {
                     logger.error(`Failed to post: "${post.title}" [${post.gid}]`, error);
