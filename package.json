@@ -19,13 +19,15 @@
     "npm": ">=11.10.0"
   },
   "scripts": {
-    "dev": "node --env-file=.env --import tsx/esm src/index.ts",
-    "deploy": "node --env-file=.env --import tsx/esm src/deploy.ts",
+    "dev": "node --env-file=.env.dev --import tsx/esm src/index.ts",
     "build": "rm -rf dist && tsc",
     "start": "node --env-file=.env dist/index.js",
+    "deploy": "node --env-file=.env --import tsx/esm src/deploy.ts",
+    "deploy:dev": "node --env-file=.env.dev --import tsx/esm src/deploy.ts",
     "lint": "eslint src/**/*.ts",
     "format": "prettier --write src/**/*.ts",
-    "clear-seen": "node --env-file=.env --input-type=module --eval \"import { DatabaseSync } from 'node:sqlite'; const db = new DatabaseSync('./data/database.sqlite'); db.exec('DELETE FROM seen_posts'); console.log('Cleared seen posts');\""
+    "clear-seen": "node --env-file=.env --input-type=module --eval \"import { DatabaseSync } from 'node:sqlite'; const db = new DatabaseSync('./data/database.sqlite'); db.exec('DELETE FROM seen_posts'); console.log('Cleared seen posts');\"",
+    "clear-seen:dev": "node --env-file=.env.dev --input-type=module --eval \"import { DatabaseSync } from 'node:sqlite'; const db = new DatabaseSync('./data/database.dev.sqlite'); db.exec('DELETE FROM seen_posts'); console.log('Cleared seen posts');\""
   },
   "dependencies": {
     "discord.js": "^14.26.4",

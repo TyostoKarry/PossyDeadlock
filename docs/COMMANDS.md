@@ -1,0 +1,61 @@
+# Commands
+
+All commands are under the `/news` group and require **Manage Server** permission.
+
+## `/news set-channel [channel]`
+
+Set the channel where Deadlock news will be posted.
+
+| Option | Required | Description |
+|---|---|---|
+| `channel` | No | The text channel to post news in. Leave empty to disable. |
+
+**Examples:**
+- `/news set-channel #deadlock-news` — posts news to #deadlock-news
+- `/news set-channel` — disables news posting, preserves other settings
+
+---
+
+## `/news set-mode <mode>`
+
+Set the type of Deadlock news to post.
+
+| Option | Required | Description |
+|---|---|---|
+| `mode` | Yes | `official` or `all` |
+
+**Modes:**
+- `official` (default) — Valve patch notes only (`steam_community_announcements`)
+- `all` — all news including third-party articles (PC Gamer, PCGamesN, etc.)
+
+Official posts also get a full patch notes thread created automatically with sections split out.
+
+---
+
+## `/news set-ping-role [role]`
+
+Set a role to ping when new Deadlock news is posted.
+
+| Option | Required | Description |
+|---|---|---|
+| `role` | No | The role to ping. Leave empty to clear. |
+
+**Examples:**
+- `/news set-ping-role @Deadlock News` — pings that role on new posts
+- `/news set-ping-role` — clears the ping role
+
+---
+
+## `/news config`
+
+Show the current news configuration for this server.
+
+Displays the configured news channel, news mode, and ping role. Only visible to you.
+
+---
+
+## `/news last-post`
+
+Show the most recent Deadlock news post based on the current news mode.
+
+Fetches live from the Steam News API and posts the latest entry as an embed.

@@ -64,7 +64,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
 });
 
 client.once(Events.ClientReady, async (readyClient) => {
-    logger.info(`Ready! Logged in as ${readyClient.user.tag}`);
+    logger.info(`Ready! Logged in as ${readyClient.user.tag} [${process.env.ENVIRONMENT}]`);
 
     const { startNewsPoller } = await import('./jobs/newsPoller.js');
     startNewsPoller(readyClient);

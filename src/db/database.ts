@@ -4,7 +4,8 @@ import { fileURLToPath } from 'url';
 import { mkdirSync } from 'fs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const dbPath = join(__dirname, '../../data/database.sqlite');
+const isDev = process.env.ENVIRONMENT === 'development';
+const dbPath = join(__dirname, `../../data/database${isDev ? '.dev' : ''}.sqlite`);
 
 mkdirSync(join(__dirname, '../../data'), { recursive: true });
 
