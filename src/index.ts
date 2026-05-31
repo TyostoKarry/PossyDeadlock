@@ -1,4 +1,4 @@
-import { Client, Events, GatewayIntentBits, Collection } from 'discord.js';
+import { Client, Events, GatewayIntentBits, Collection, MessageFlags } from 'discord.js';
 import { readdirSync, statSync } from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
@@ -58,7 +58,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
         logger.error('Error executing command', error);
         await interaction.reply({
             content: 'There was an error while executing this command!',
-            ephemeral: true,
+            flags: MessageFlags.Ephemeral,
         });
     }
 });

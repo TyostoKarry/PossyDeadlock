@@ -1,4 +1,4 @@
-import { ChatInputCommandInteraction, TextChannel } from 'discord.js';
+import { ChatInputCommandInteraction, MessageFlags, TextChannel } from 'discord.js';
 import { clearNewsChannel, setNewsChannel } from '../../db/database.js';
 import { logger } from '../../utils/logger.js';
 
@@ -12,7 +12,7 @@ export const handleSetChannel = async (
         logger.info(`[${interaction.guildId}] ${interaction.user.tag} cleared news channel`);
         await interaction.reply({
             content: 'News channel cleared — bot will no longer post Deadlock news.',
-            ephemeral: true,
+            flags: MessageFlags.Ephemeral,
         });
         return;
     }
@@ -20,7 +20,7 @@ export const handleSetChannel = async (
     if (!(channel instanceof TextChannel)) {
         await interaction.reply({
             content: 'Please select a text channel.',
-            ephemeral: true,
+            flags: MessageFlags.Ephemeral,
         });
         return;
     }
@@ -31,6 +31,6 @@ export const handleSetChannel = async (
     );
     await interaction.reply({
         content: `Deadlock news will now be posted in <#${channel.id}>`,
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
     });
 };

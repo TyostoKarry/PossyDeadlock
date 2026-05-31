@@ -1,4 +1,4 @@
-import { ChatInputCommandInteraction, Role } from 'discord.js';
+import { ChatInputCommandInteraction, MessageFlags, Role } from 'discord.js';
 import { getNewsChannel, setPingRole } from '../../db/database.js';
 import { logger } from '../../utils/logger.js';
 
@@ -9,7 +9,7 @@ export const handleSetPingRole = async (
     if (!channelId) {
         await interaction.reply({
             content: 'Please set a news channel first with `/news set-channel`.',
-            ephemeral: true,
+            flags: MessageFlags.Ephemeral,
         });
         return;
     }
@@ -21,7 +21,7 @@ export const handleSetPingRole = async (
         logger.info(`[${interaction.guildId}] ${interaction.user.tag} cleared ping role`);
         await interaction.reply({
             content: 'Ping role cleared — no role will be pinged on new posts.',
-            ephemeral: true,
+            flags: MessageFlags.Ephemeral,
         });
         return;
     }
@@ -29,7 +29,7 @@ export const handleSetPingRole = async (
     if (!(role instanceof Role)) {
         await interaction.reply({
             content: 'Please select a valid role.',
-            ephemeral: true,
+            flags: MessageFlags.Ephemeral,
         });
         return;
     }
@@ -41,6 +41,6 @@ export const handleSetPingRole = async (
 
     await interaction.reply({
         content: `<@&${role.id}> will now be pinged when new Deadlock news is posted.`,
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
     });
 }

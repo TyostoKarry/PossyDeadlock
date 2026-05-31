@@ -1,4 +1,4 @@
-import { ChatInputCommandInteraction } from 'discord.js';
+import { ChatInputCommandInteraction, MessageFlags } from 'discord.js';
 import { getNewsChannel, setNewsMode } from '../../db/database.js';
 import { logger } from '../../utils/logger.js';
 
@@ -7,7 +7,7 @@ export const handleSetMode = async (interaction: ChatInputCommandInteraction): P
     if (!channelID) {
         await interaction.reply({
             content: 'Please set a news channel first with `/news set-channel`.',
-            ephemeral: true,
+            flags: MessageFlags.Ephemeral,
         });
         return;
     }
@@ -23,6 +23,6 @@ export const handleSetMode = async (interaction: ChatInputCommandInteraction): P
 
     await interaction.reply({
         content: `News mode set to: **${label}**`,
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
     });
 }

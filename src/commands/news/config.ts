@@ -1,4 +1,4 @@
-import { ChatInputCommandInteraction, EmbedBuilder } from 'discord.js';
+import { ChatInputCommandInteraction, EmbedBuilder, MessageFlags } from 'discord.js';
 import { getNewsChannel, getNewsMode, getPingRole } from '../../db/database.js';
 import { logger } from '../../utils/logger.js';
 
@@ -33,5 +33,5 @@ export const handleConfig = async (interaction: ChatInputCommandInteraction): Pr
         );
 
     logger.info(`[${guildId}] ${interaction.user.tag} checked news config`);
-    await interaction.reply({ embeds: [embed], ephemeral: true });
+    await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
 }
