@@ -20,7 +20,8 @@ const poll = async (client: Client<true>): Promise<void> => {
             const channelID = getNewsChannel(guild.id);
             if (!channelID) continue;
 
-            const channel = await client.channels.fetch(channelID);
+            const channel =
+                client.channels.cache.get(channelID) ?? (await client.channels.fetch(channelID));
             if (!(channel instanceof TextChannel)) continue;
 
             const mode = getNewsMode(guild.id);
