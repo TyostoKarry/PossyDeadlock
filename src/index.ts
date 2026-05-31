@@ -70,4 +70,13 @@ client.once(Events.ClientReady, async (readyClient) => {
     startNewsPoller(readyClient);
 });
 
+const shutdown = (signal: string): void => {
+    logger.info(`Received ${signal}, shutting down gracefully...`);
+    client.destroy();
+    process.exit(0);
+};
+
+process.on('SIGTERM', () => shutdown('SIGTERM'));
+process.on('SIGINT', () => shutdown('SIGINT'));
+
 client.login(process.env.DISCORD_TOKEN);
