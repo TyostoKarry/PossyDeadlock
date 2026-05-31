@@ -3,6 +3,9 @@ import tseslint from 'typescript-eslint';
 import prettier from 'eslint-config-prettier';
 
 export default tseslint.config(
+  {
+    ignores: ['ecosystem.config.cjs']
+  },
   eslint.configs.recommended,
   ...tseslint.configs.recommended,
   prettier,
