@@ -1,5 +1,4 @@
 import cron from 'node-cron';
-import { Client } from 'discord.js';
 import {
     fetchAllHeroes,
     fetchHeroStats,
@@ -62,7 +61,7 @@ const poll = async (): Promise<void> => {
     }
 };
 
-export const startHeroPoller = (_client: Client<true>): void => {
+export const startHeroPoller = (): void => {
     logger.info('Hero poller started, running daily at 06:00');
     void poll();
     cron.schedule('0 6 * * *', () => void poll());

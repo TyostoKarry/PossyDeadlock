@@ -1,5 +1,6 @@
 import { REST, Routes } from 'discord.js';
 import news from './commands/news/index.js';
+import heroes from './commands/heroes/index.js';
 
 const token = process.env.DISCORD_TOKEN;
 const clientId = process.env.CLIENT_ID;
@@ -12,7 +13,7 @@ const rest = new REST().setToken(token);
 
 await rest.put(
   Routes.applicationCommands(clientId),
-  { body: [news.data.toJSON()] },
+  { body: [news.data.toJSON(), heroes.data.toJSON()] },
 );
 
 console.log('Commands registered!');
