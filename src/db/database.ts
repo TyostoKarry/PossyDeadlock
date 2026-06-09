@@ -157,3 +157,8 @@ export const getHeroSynergies = (heroId: number): HeroSynergy[] =>
     db
         .prepare('SELECT * FROM hero_synergies WHERE hero_id = ? ORDER BY win_rate DESC')
         .all(heroId) as unknown as HeroSynergy[];
+
+export const getRandomHero = (): Hero | undefined =>
+    db.prepare('SELECT * FROM heroes ORDER BY RANDOM() LIMIT 1').get() as unknown as
+        | Hero
+        | undefined;

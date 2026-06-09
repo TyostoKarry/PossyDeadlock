@@ -10,6 +10,7 @@ interface Command {
     data: { name: string; toJSON: () => unknown };
     execute: (interaction: unknown) => Promise<void>;
     autocomplete?: (interaction: unknown) => Promise<void>;
+    handleButton?: (interaction: unknown) => Promise<void>;
 }
 
 declare module 'discord.js' {
@@ -56,6 +57,19 @@ client.on(Events.InteractionCreate, async (interaction) => {
             await command.autocomplete(interaction);
         } catch (error) {
             logger.error('Error handling autocomplete', error);
+        }
+        return;
+    }
+
+    if (interaction.isButton()) {
+        const [commandName = ''] = interaction.customId.split(':');
+        const command = client.commands.get(commandName);
+        if (!command?.handleButton) return;
+
+        try {
+            await command.handleButton(interaction);
+        } catch (error) {
+            logger.error('Error handling button interaction', error);
         }
         return;
     }

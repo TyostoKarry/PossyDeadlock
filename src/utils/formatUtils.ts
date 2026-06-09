@@ -62,3 +62,17 @@ export const splitIntoSections = (text: string): string[] => {
 
     return chunks.length > 0 ? chunks : [stripHtml(text).slice(0, 2000)];
 };
+
+export const formatRelativeTime = (utcDateString: string): string => {
+    const updatedAt = new Date(`${utcDateString.replace(' ', 'T')}Z`);
+    const diffMinutes = Math.floor((Date.now() - updatedAt.getTime()) / 60000);
+
+    if (diffMinutes < 1) return 'just now';
+    if (diffMinutes < 60) return `${diffMinutes}m ago`;
+
+    const diffHours = Math.floor(diffMinutes / 60);
+    if (diffHours < 24) return `${diffHours}h ago`;
+
+    const diffDays = Math.floor(diffHours / 24);
+    return `${diffDays}d ago`;
+};

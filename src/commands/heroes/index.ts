@@ -1,8 +1,8 @@
-import { AutocompleteInteraction, ChatInputCommandInteraction, SlashCommandBuilder } from 'discord.js';
+import { AutocompleteInteraction, ButtonInteraction, ChatInputCommandInteraction, SlashCommandBuilder } from 'discord.js';
 import { handleList } from './list.js';
 import { handleMatchup } from './matchup.js';
 import { handleStats } from './stats.js';
-import { handleRandom } from './random.js';
+import { handleRandom, handleRandomReroll } from './random.js';
 import { getAllHeroes } from '../../db/database.js';
 
 export default {
@@ -53,5 +53,10 @@ export default {
                 .map((hero) => ({ name: hero.name, value: hero.name }));
 
             await interaction.respond(choices);
+        },
+
+        handleButton: async (interaction: ButtonInteraction): Promise<void> => {
+            const [, action] = interaction.customId.split(':');
+            if (action === 'reroll') await handleRandomReroll(interaction);
         },
 };
