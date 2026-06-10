@@ -78,11 +78,13 @@ export const markPostSeen = (postId: string): void => {
 
 export const upsertHero = (hero: Omit<Hero, 'updated_at'>): void => {
     db.prepare(
-        `INSERT INTO heroes (id, name, image_url, base_hp, hp_per_boon, move_speed, stamina, sprint_speed, win_rate, pick_rate, matches, updated_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+        `INSERT INTO heroes (id, name, image_url, hero_type, complexity, base_hp, hp_per_boon, move_speed, stamina, sprint_speed, win_rate, pick_rate, matches, updated_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
          ON CONFLICT(id) DO UPDATE SET
            name = excluded.name,
            image_url = excluded.image_url,
+           hero_type = excluded.hero_type,
+           complexity = excluded.complexity,
            base_hp = excluded.base_hp,
            hp_per_boon = excluded.hp_per_boon,
            move_speed = excluded.move_speed,
@@ -96,6 +98,8 @@ export const upsertHero = (hero: Omit<Hero, 'updated_at'>): void => {
         hero.id,
         hero.name,
         hero.image_url,
+        hero.hero_type,
+        hero.complexity,
         hero.base_hp,
         hero.hp_per_boon,
         hero.move_speed,

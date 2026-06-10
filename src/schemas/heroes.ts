@@ -4,6 +4,8 @@ export const ApiHeroSchema = z.object({
     id: z.number(),
     name: z.string(),
     images: z.object({ icon_hero_card: z.string() }),
+    hero_type: z.string().optional(),
+    complexity: z.number().optional(),
     starting_stats: z.object({
         max_health: z.object({ value: z.number() }).optional(),
         max_move_speed: z.object({ value: z.number() }).optional(),

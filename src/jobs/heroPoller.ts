@@ -26,6 +26,8 @@ const poll = async (): Promise<void> => {
                 id: hero.id,
                 name: hero.name,
                 image_url: hero.images?.icon_hero_card ?? null,
+                hero_type: hero.hero_type ?? null,
+                complexity: hero.complexity ?? null,
                 base_hp: hero.starting_stats?.max_health?.value ?? null,
                 hp_per_boon:
                     hero.standard_level_up_upgrades?.MODIFIER_VALUE_BASE_HEALTH_FROM_LEVEL ?? null,

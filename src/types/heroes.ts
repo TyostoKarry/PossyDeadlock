@@ -2,6 +2,8 @@ export interface Hero {
     id: number;
     name: string;
     image_url: string | null;
+    hero_type: string | null;
+    complexity: number | null;
     base_hp: number | null;
     hp_per_boon: number | null;
     move_speed: number | null;
