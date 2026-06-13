@@ -1,4 +1,12 @@
-import { ActionRowBuilder, ButtonBuilder, ButtonInteraction, ButtonStyle, ChatInputCommandInteraction, EmbedBuilder, MessageFlags } from 'discord.js';
+import {
+    ActionRowBuilder,
+    ButtonBuilder,
+    ButtonInteraction,
+    ButtonStyle,
+    ChatInputCommandInteraction,
+    EmbedBuilder,
+    MessageFlags,
+} from 'discord.js';
 import type { Hero } from '../../types/heroes.js';
 import { formatRelativeTime } from '../../utils/formatUtils.js';
 import { getRandomHero } from '../../db/database.js';
@@ -13,12 +21,22 @@ const buildRandomEmbed = (hero: Hero): EmbedBuilder =>
         .setThumbnail(hero.image_url)
         .setColor(0x00b4d8)
         .addFields(
-            { name: 'Win Rate', value: hero.win_rate !== null ? `${(hero.win_rate * 100).toFixed(1)}%` : 'N/A', inline: true },
-            { name: 'Pick Rate', value: hero.pick_rate !== null ? `${(hero.pick_rate * 100).toFixed(1)}%` : 'N/A', inline: true },
+            {
+                name: 'Win Rate',
+                value: hero.win_rate !== null ? `${(hero.win_rate * 100).toFixed(1)}%` : 'N/A',
+                inline: true,
+            },
+            {
+                name: 'Pick Rate',
+                value: hero.pick_rate !== null ? `${(hero.pick_rate * 100).toFixed(1)}%` : 'N/A',
+                inline: true,
+            },
         )
-        .setFooter({ text: `Last updated ${formatRelativeTime(hero.updated_at)} • deadlock-api.com` });
+        .setFooter({
+            text: `Last updated ${formatRelativeTime(hero.updated_at)} • deadlock-api.com`,
+        });
 
-const buildRerollButton = (userId: string): ActionRowBuilder<ButtonBuilder> => 
+const buildRerollButton = (userId: string): ActionRowBuilder<ButtonBuilder> =>
     new ActionRowBuilder<ButtonBuilder>().addComponents(
         new ButtonBuilder()
             .setCustomId(`${REROLL_PREFIX}:${userId}`)

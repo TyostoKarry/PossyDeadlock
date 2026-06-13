@@ -1,19 +1,20 @@
-import { EmbedBuilder, MessageFlags, type ChatInputCommandInteraction } from "discord.js";
-import { getHeroById, getHeroByName, getHeroMatchups } from "../../db/database.js";
-import type { Hero, HeroMatchup } from "../../types/heroes.js";
-import { formatRelativeTime } from "../../utils/formatUtils.js";
-import { logger } from "../../utils/logger.js";
+import { EmbedBuilder, MessageFlags, type ChatInputCommandInteraction } from 'discord.js';
+import { getHeroById, getHeroByName, getHeroMatchups } from '../../db/database.js';
+import type { Hero, HeroMatchup } from '../../types/heroes.js';
+import { formatRelativeTime } from '../../utils/formatUtils.js';
+import { logger } from '../../utils/logger.js';
 
-const formatComplexity = (level: number): string =>
-    '●'.repeat(level) + '○'.repeat(4 - level);
+const formatComplexity = (level: number): string => '●'.repeat(level) + '○'.repeat(4 - level);
 
 const formatBaseStats = (hero: Hero): string => {
     const hp =
         hero.base_hp !== null
             ? `HP: ${hero.base_hp}${hero.hp_per_boon !== null ? ` (+${hero.hp_per_boon}/boon)` : ''}`
             : 'HP: N/A';
-    const moveSpeed = hero.move_speed !== null ? `Move Speed: ${hero.move_speed}m/s` : 'Move Speed: N/A';
-    const sprintSpeed = hero.sprint_speed !== null ? `Sprint Speed: ${hero.sprint_speed}m/s` : 'Sprint Speed: N/A';
+    const moveSpeed =
+        hero.move_speed !== null ? `Move Speed: ${hero.move_speed}m/s` : 'Move Speed: N/A';
+    const sprintSpeed =
+        hero.sprint_speed !== null ? `Sprint Speed: ${hero.sprint_speed}m/s` : 'Sprint Speed: N/A';
     const stamina = hero.stamina !== null ? `Stamina: ${hero.stamina}` : 'Stamina: N/A';
     return [hp, moveSpeed, sprintSpeed, stamina].join('\n');
 };
@@ -65,12 +66,22 @@ export const handleStats = async (interaction: ChatInputCommandInteraction): Pro
         const worstMatchups = [...matchups].reverse().slice(0, 3);
 
         embed.addFields(
-            { name: 'Best Against', value: bestMatchups.map(formatMatchupEntry).join('\n'), inline: true },
-            { name: 'Worst Against', value: worstMatchups.map(formatMatchupEntry).join('\n'), inline: true },
+            {
+                name: 'Best Against',
+                value: bestMatchups.map(formatMatchupEntry).join('\n'),
+                inline: true,
+            },
+            {
+                name: 'Worst Against',
+                value: worstMatchups.map(formatMatchupEntry).join('\n'),
+                inline: true,
+            },
         );
     }
 
-    embed.setFooter({ text: `Last updated ${formatRelativeTime(hero.updated_at)} • deadlock-api.com` });
+    embed.setFooter({
+        text: `Last updated ${formatRelativeTime(hero.updated_at)} • deadlock-api.com`,
+    });
 
     logger.info(`[${interaction.guildId}] ${interaction.user.tag} viewed stats for ${hero.name}`);
     await interaction.reply({ embeds: [embed] });

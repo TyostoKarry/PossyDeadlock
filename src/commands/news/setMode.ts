@@ -25,4 +25,4 @@ export const handleSetMode = async (interaction: ChatInputCommandInteraction): P
         content: `News mode set to: **${label}**`,
         flags: MessageFlags.Ephemeral,
     });
-}
+};

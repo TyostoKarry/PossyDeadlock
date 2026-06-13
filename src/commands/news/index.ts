@@ -47,14 +47,10 @@ export default {
                 ),
         )
         .addSubcommand((sub) =>
-            sub
-                .setName('config')
-                .setDescription('Show the current Deadlock news configuration'),
+            sub.setName('config').setDescription('Show the current Deadlock news configuration'),
         )
         .addSubcommand((sub) =>
-            sub
-                .setName('last-post')
-                .setDescription('Show the most recent Deadlock news post'),
+            sub.setName('last-post').setDescription('Show the most recent Deadlock news post'),
         )
         .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild),
 

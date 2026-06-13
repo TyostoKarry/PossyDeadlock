@@ -2,9 +2,7 @@ import { ChatInputCommandInteraction, MessageFlags, TextChannel } from 'discord.
 import { clearNewsChannel, setNewsChannel } from '../../db/database.js';
 import { logger } from '../../utils/logger.js';
 
-export const handleSetChannel = async (
-    interaction: ChatInputCommandInteraction,
-): Promise<void> => {
+export const handleSetChannel = async (interaction: ChatInputCommandInteraction): Promise<void> => {
     const channel = interaction.options.getChannel('channel');
 
     if (!channel) {

@@ -1,9 +1,18 @@
-import { ChatInputCommandInteraction, EmbedBuilder, MessageFlags } from "discord.js";
-import { getHeroById, getHeroByName, getHeroMatchups, getHeroSynergies } from "../../db/database.js";
-import { formatRelativeTime } from "../../utils/formatUtils.js";
-import { logger } from "../../utils/logger.js";
+import { ChatInputCommandInteraction, EmbedBuilder, MessageFlags } from 'discord.js';
+import {
+    getHeroById,
+    getHeroByName,
+    getHeroMatchups,
+    getHeroSynergies,
+} from '../../db/database.js';
+import { formatRelativeTime } from '../../utils/formatUtils.js';
+import { logger } from '../../utils/logger.js';
 
-const formatEntry = (otherHeroId: number, winRate: number | null, matches: number | null): string => {
+const formatEntry = (
+    otherHeroId: number,
+    winRate: number | null,
+    matches: number | null,
+): string => {
     const name = getHeroById(otherHeroId)?.name ?? 'Unknown';
     const wr = winRate !== null ? `**${(winRate * 100).toFixed(1)}%**` : 'N/A';
     const m = matches !== null ? matches.toLocaleString('en-US') : 'N/A';
@@ -38,13 +47,17 @@ export const handleMatchup = async (interaction: ChatInputCommandInteraction): P
         embed.addFields(
             {
                 name: 'Best With',
-                value: bestWith.map((s) => formatEntry(s.ally_id, s.win_rate, s.matches)).join('\n'),
+                value: bestWith
+                    .map((s) => formatEntry(s.ally_id, s.win_rate, s.matches))
+                    .join('\n'),
                 inline: true,
             },
             { name: '\u200b', value: '\u200b', inline: true },
             {
                 name: 'Worst With',
-                value: worstWith.map((s) => formatEntry(s.ally_id, s.win_rate, s.matches)).join('\n'),
+                value: worstWith
+                    .map((s) => formatEntry(s.ally_id, s.win_rate, s.matches))
+                    .join('\n'),
                 inline: true,
             },
         );
@@ -57,13 +70,17 @@ export const handleMatchup = async (interaction: ChatInputCommandInteraction): P
         embed.addFields(
             {
                 name: 'Best Against',
-                value: bestAgainst.map((m) => formatEntry(m.enemy_id, m.win_rate, m.matches)).join('\n'),
+                value: bestAgainst
+                    .map((m) => formatEntry(m.enemy_id, m.win_rate, m.matches))
+                    .join('\n'),
                 inline: true,
             },
             { name: '\u200b', value: '\u200b', inline: true },
             {
                 name: 'Worst Against',
-                value: worstAgainst.map((m) => formatEntry(m.enemy_id, m.win_rate, m.matches)).join('\n'),
+                value: worstAgainst
+                    .map((m) => formatEntry(m.enemy_id, m.win_rate, m.matches))
+                    .join('\n'),
                 inline: true,
             },
         );
@@ -73,8 +90,12 @@ export const handleMatchup = async (interaction: ChatInputCommandInteraction): P
         embed.setDescription('No matchup data available yet.');
     }
 
-    embed.setFooter({ text: `Last updated ${formatRelativeTime(hero.updated_at)} • deadlock-api.com` });
+    embed.setFooter({
+        text: `Last updated ${formatRelativeTime(hero.updated_at)} • deadlock-api.com`,
+    });
 
-    logger.info(`[${interaction.guildId}] ${interaction.user.tag} viewed matchups for ${hero.name}`);
+    logger.info(
+        `[${interaction.guildId}] ${interaction.user.tag} viewed matchups for ${hero.name}`,
+    );
     await interaction.reply({ embeds: [embed] });
 };

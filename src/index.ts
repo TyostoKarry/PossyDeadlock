@@ -31,9 +31,7 @@ for (const entry of entries) {
     const entryPath = join(commandsPath, entry);
     const isDir = statSync(entryPath).isDirectory();
 
-    const modulePath = isDir
-        ? join(entryPath, `index${ext}`)
-        : entryPath;
+    const modulePath = isDir ? join(entryPath, `index${ext}`) : entryPath;
 
     if (!isDir && !entry.endsWith(ext)) continue;
 

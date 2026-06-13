@@ -34,4 +34,4 @@ export const handleConfig = async (interaction: ChatInputCommandInteraction): Pr
 
     logger.info(`[${guildId}] ${interaction.user.tag} checked news config`);
     await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
-}
+};
