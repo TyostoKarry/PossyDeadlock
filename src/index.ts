@@ -9,6 +9,8 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 interface Command {
     data: { name: string; toJSON: () => unknown };
     execute: (interaction: unknown) => Promise<void>;
+    autocomplete?: (interaction: unknown) => Promise<void>;
+    handleButton?: (interaction: unknown) => Promise<void>;
 }
 
 declare module 'discord.js' {
@@ -29,9 +31,7 @@ for (const entry of entries) {
     const entryPath = join(commandsPath, entry);
     const isDir = statSync(entryPath).isDirectory();
 
-    const modulePath = isDir
-        ? join(entryPath, `index${ext}`)
-        : entryPath;
+    const modulePath = isDir ? join(entryPath, `index${ext}`) : entryPath;
 
     if (!isDir && !entry.endsWith(ext)) continue;
 
@@ -47,6 +47,31 @@ for (const entry of entries) {
 }
 
 client.on(Events.InteractionCreate, async (interaction) => {
+    if (interaction.isAutocomplete()) {
+        const command = client.commands.get(interaction.commandName);
+        if (!command?.autocomplete) return;
+
+        try {
+            await command.autocomplete(interaction);
+        } catch (error) {
+            logger.error('Error handling autocomplete', error);
+        }
+        return;
+    }
+
+    if (interaction.isButton()) {
+        const [commandName = ''] = interaction.customId.split(':');
+        const command = client.commands.get(commandName);
+        if (!command?.handleButton) return;
+
+        try {
+            await command.handleButton(interaction);
+        } catch (error) {
+            logger.error('Error handling button interaction', error);
+        }
+        return;
+    }
+
     if (!interaction.isChatInputCommand()) return;
 
     const command = client.commands.get(interaction.commandName);
@@ -68,6 +93,8 @@ client.once(Events.ClientReady, async (readyClient) => {
 
     const { startNewsPoller } = await import('./jobs/newsPoller.js');
     startNewsPoller(readyClient);
+    const { startHeroPoller } = await import('./jobs/heroPoller.js');
+    startHeroPoller();
 });
 
 const shutdown = (signal: string): void => {

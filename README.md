@@ -1,6 +1,6 @@
 # PossyDeadlock
 
-A Discord bot that automatically posts Deadlock news and patch notes to your server.
+A Discord bot that automatically posts Deadlock news and patch notes to your server, and provides Deadlock hero stats lookup commands.
 
 ## Features
 
@@ -9,10 +9,13 @@ A Discord bot that automatically posts Deadlock news and patch notes to your ser
 - Full patch notes thread for official Valve posts
 - Role ping on new posts
 - Simple slash command configuration
+- Hero stats, matchups/synergies, and a sortable hero list, backed by a daily-refreshed database from deadlock-api.com
 
 ## Commands
 
-All commands are under `/news` and require **Manage Server** permission.
+### `/news`
+
+Requires **Manage Server** permission.
 
 | Command | Description |
 |---|---|
@@ -21,6 +24,17 @@ All commands are under `/news` and require **Manage Server** permission.
 | `/news set-ping-role [role]` | Set a role to ping on new posts. Leave empty to clear. |
 | `/news config` | Show current configuration. |
 | `/news last-post` | Show the most recent news post. |
+
+### `/heroes`
+
+Available to everyone.
+
+| Command | Description |
+|---|---|
+| `/heroes stats <hero>` | Show base stats and performance for a hero. |
+| `/heroes matchup <hero>` | Show best/worst synergies and counters for a hero. |
+| `/heroes list [sort]` | List all heroes, sortable by name, win rate, or pick rate, with pagination. |
+| `/heroes random` | Show a random hero, with a re-roll button. |
 
 See [docs/COMMANDS.md](docs/COMMANDS.md) for full details and examples.
 

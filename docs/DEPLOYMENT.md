@@ -99,6 +99,10 @@ pm2 restart possydeadlock
 
 If the update added or changed slash commands, run `npm run deploy` before restarting.
 
+## Hero Data
+
+The `/heroes` commands are backed by data from [deadlock-api.com](https://deadlock-api.com), a public API that requires no API key or extra configuration. The bot fetches hero stats, matchups, and synergies on startup and then daily at 06:00 (server time), storing them in the same SQLite database used for news settings. The required tables are created automatically by the built-in migration runner.
+
 ## Useful pm2 Commands
 
 | Command | Description |

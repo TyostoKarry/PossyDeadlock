@@ -35,12 +35,10 @@ export const handleSetPingRole = async (
     }
 
     setPingRole(interaction.guildId!, role.id);
-    logger.info(
-        `[${interaction.guildId}] ${interaction.user.tag} set ping role to @${role.name}`,
-    );
+    logger.info(`[${interaction.guildId}] ${interaction.user.tag} set ping role to @${role.name}`);
 
     await interaction.reply({
         content: `<@&${role.id}> will now be pinged when new Deadlock news is posted.`,
         flags: MessageFlags.Ephemeral,
     });
-}
+};

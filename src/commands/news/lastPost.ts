@@ -30,12 +30,10 @@ export const handleLastPost = async (interaction: ChatInputCommandInteraction): 
         const url = encodePostUrl(post.url);
         if (url) embed.setURL(url);
 
-        logger.info(
-            `[${interaction.guildId}] ${interaction.user.tag} requested last news post`,
-        );
+        logger.info(`[${interaction.guildId}] ${interaction.user.tag} requested last news post`);
         await interaction.editReply({ embeds: [embed] });
     } catch (error) {
         logger.error('Failed to fetch last news post', error);
         await interaction.editReply('Failed to fetch the latest news post.');
     }
-}
+};

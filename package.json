@@ -24,8 +24,8 @@
     "start": "node --env-file=.env dist/index.js",
     "deploy": "node --env-file=.env --import tsx/esm src/deploy.ts",
     "deploy:dev": "node --env-file=.env.dev --import tsx/esm src/deploy.ts",
-    "lint": "eslint src/**/*.ts",
-    "format": "prettier --write src/**/*.ts",
+    "lint": "eslint 'src/**/*.ts'",
+    "format": "prettier --write 'src/**/*.ts'",
     "clear-seen": "node --env-file=.env --input-type=module --eval \"import { DatabaseSync } from 'node:sqlite'; const db = new DatabaseSync('./data/database.sqlite'); db.exec('DELETE FROM seen_posts'); console.log('Cleared seen posts');\"",
     "clear-seen:dev": "node --env-file=.env.dev --input-type=module --eval \"import { DatabaseSync } from 'node:sqlite'; const db = new DatabaseSync('./data/database.dev.sqlite'); db.exec('DELETE FROM seen_posts'); console.log('Cleared seen posts');\""
   },
@@ -42,6 +42,7 @@
     "prettier": "^3.8.3",
     "tsx": "^4.22.3",
     "typescript": "^6.0.3",
-    "typescript-eslint": "^8.59.4"
+    "typescript-eslint": "^8.59.4",
+    "zod": "^4.4.3"
   }
 }
