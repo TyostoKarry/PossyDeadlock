@@ -56,3 +56,4 @@ See [docs/COMMANDS.md](docs/COMMANDS.md) for full details and examples.
 - [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) — local dev setup and project structure
 - [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) — production deployment with pm2
 - [docs/COMMANDS.md](docs/COMMANDS.md) — command reference
+- [docs/CHANGELOG.md](docs/CHANGELOG.md) — version history
