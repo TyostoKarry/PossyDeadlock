@@ -1,16 +1,29 @@
 import { ChatInputCommandInteraction, MessageFlags, SlashCommandBuilder } from 'discord.js';
 import { logger } from '../../utils/logger.js';
 import { buildGeneralEmbed } from './general.js';
+import { buildNewsHelpEmbed } from './news.js';
 
 export default {
     data: new SlashCommandBuilder()
         .setName('help')
-        .setDescription('Show help and command information'),
+        .setDescription('Show help and command information')
+        .addStringOption((option) =>
+            option
+                .setName('topic')
+                .setDescription('Show commands for a specific topic')
+                .addChoices({ name: 'News', value: 'news' }),
+        ),
 
     execute: async (interaction: ChatInputCommandInteraction): Promise<void> => {
-        logger.info(`[${interaction.guildId}] ${interaction.user.tag} viewed help`);
+        const topic = interaction.options.getString('topic');
+
+        const embed = topic === 'news' ? buildNewsHelpEmbed() : buildGeneralEmbed();
+
+        logger.info(
+            `[${interaction.guildId}] ${interaction.user.tag} viewed help (${topic ?? 'general'})`,
+        );
         await interaction.reply({
-            embeds: [buildGeneralEmbed()],
+            embeds: [embed],
             flags: MessageFlags.Ephemeral,
         });
     },
