@@ -18,7 +18,6 @@ import {
 } from '../utils/formatUtils.js';
 
 const poll = async (client: Client<true>): Promise<void> => {
-    logger.info('Polling for news...');
     try {
         const posts = await fetchDeadlockNews();
 
