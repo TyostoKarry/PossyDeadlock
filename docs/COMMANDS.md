@@ -82,7 +82,7 @@ Displays hero type and complexity, base stats (HP, move speed, sprint speed, sta
 
 ## `/heroes matchup <hero>`
 
-Show synergies and counters for a specific hero.
+Show best/worst synergies and counters for a specific hero.
 
 | Option | Required | Description |
 |---|---|---|
