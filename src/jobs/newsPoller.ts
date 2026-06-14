@@ -12,6 +12,7 @@ import { logger } from '../utils/logger.js';
 import {
     encodePostUrl,
     extractNewsImageUrl,
+    fetchNewsOgImageUrl,
     splitIntoSections,
     stripHtml,
 } from '../utils/formatUtils.js';
@@ -51,7 +52,9 @@ const poll = async (client: Client<true>): Promise<void> => {
                 const url = encodePostUrl(post.url);
                 if (url) embed.setURL(url);
 
-                const imageUrl = extractNewsImageUrl(post.contents);
+                const imageUrl =
+                    extractNewsImageUrl(post.contents) ??
+                    (url ? await fetchNewsOgImageUrl(url) : null);
                 if (imageUrl) embed.setImage(imageUrl);
 
                 try {
