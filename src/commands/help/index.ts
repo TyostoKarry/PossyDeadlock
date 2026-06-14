@@ -8,8 +8,10 @@ import { logger } from '../../utils/logger.js';
 import { buildGeneralEmbed } from './general.js';
 import { buildNewsHelpEmbed } from './news.js';
 import { buildHeroesHelpEmbed } from './heroes.js';
+import { buildDeadlockApiHelpEmbed } from './deadlockApi.js';
 
 const EMBED_BUILDERS: Record<string, () => EmbedBuilder> = {
+    'deadlock-api': buildDeadlockApiHelpEmbed,
     heroes: buildHeroesHelpEmbed,
     news: buildNewsHelpEmbed,
 };
@@ -22,7 +24,11 @@ export default {
             option
                 .setName('topic')
                 .setDescription('Show commands for a specific topic')
-                .addChoices({ name: 'Heroes', value: 'heroes' }, { name: 'News', value: 'news' }),
+                .addChoices(
+                    { name: 'Deadlock API', value: 'deadlock-api' },
+                    { name: 'Heroes', value: 'heroes' },
+                    { name: 'News', value: 'news' },
+                ),
         ),
 
     execute: async (interaction: ChatInputCommandInteraction): Promise<void> => {
