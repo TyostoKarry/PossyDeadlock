@@ -9,7 +9,12 @@ import {
     markPostSeen,
 } from '../db/database.js';
 import { logger } from '../utils/logger.js';
-import { encodePostUrl, splitIntoSections, stripHtml } from '../utils/formatUtils.js';
+import {
+    encodePostUrl,
+    extractNewsImageUrl,
+    splitIntoSections,
+    stripHtml,
+} from '../utils/formatUtils.js';
 
 const poll = async (client: Client<true>): Promise<void> => {
     logger.info('Polling for news...');
@@ -45,6 +50,9 @@ const poll = async (client: Client<true>): Promise<void> => {
 
                 const url = encodePostUrl(post.url);
                 if (url) embed.setURL(url);
+
+                const imageUrl = extractNewsImageUrl(post.contents);
+                if (imageUrl) embed.setImage(imageUrl);
 
                 try {
                     const message = await channel.send({

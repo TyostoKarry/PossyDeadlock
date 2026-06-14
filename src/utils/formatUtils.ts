@@ -11,6 +11,11 @@ export const encodePostUrl = (url: string): string | null => {
     }
 };
 
+export const extractNewsImageUrl = (content: string): string | null => {
+    const match = content.match(/<img[^>]+src="([^"]+)"/i);
+    return match?.[1] ?? null;
+};
+
 export const stripHtml = (text: string): string => {
     return text
         .replace(/\[p\]/gi, '\n')

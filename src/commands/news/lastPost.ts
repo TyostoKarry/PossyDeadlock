@@ -1,7 +1,7 @@
 import { ChatInputCommandInteraction, EmbedBuilder } from 'discord.js';
 import { getNewsMode } from '../../db/database.js';
 import { fetchDeadlockNews, OFFICIAL_FEED } from '../../utils/steamApi.js';
-import { encodePostUrl, stripHtml } from '../../utils/formatUtils.js';
+import { encodePostUrl, extractNewsImageUrl, stripHtml } from '../../utils/formatUtils.js';
 import { logger } from '../../utils/logger.js';
 
 export const handleLastPost = async (interaction: ChatInputCommandInteraction): Promise<void> => {
@@ -29,6 +29,9 @@ export const handleLastPost = async (interaction: ChatInputCommandInteraction): 
 
         const url = encodePostUrl(post.url);
         if (url) embed.setURL(url);
+
+        const imageUrl = extractNewsImageUrl(post.contents);
+        if (imageUrl) embed.setImage(imageUrl);
 
         logger.info(`[${interaction.guildId}] ${interaction.user.tag} requested last news post`);
         await interaction.editReply({ embeds: [embed] });
