@@ -9,10 +9,15 @@ import {
     markPostSeen,
 } from '../db/database.js';
 import { logger } from '../utils/logger.js';
-import { encodePostUrl, splitIntoSections, stripHtml } from '../utils/formatUtils.js';
+import {
+    encodePostUrl,
+    extractNewsImageUrl,
+    fetchNewsOgImageUrl,
+    splitIntoSections,
+    stripHtml,
+} from '../utils/formatUtils.js';
 
 const poll = async (client: Client<true>): Promise<void> => {
-    logger.info('Polling for news...');
     try {
         const posts = await fetchDeadlockNews();
 
@@ -45,6 +50,11 @@ const poll = async (client: Client<true>): Promise<void> => {
 
                 const url = encodePostUrl(post.url);
                 if (url) embed.setURL(url);
+
+                const imageUrl =
+                    extractNewsImageUrl(post.contents) ??
+                    (url ? await fetchNewsOgImageUrl(url) : null);
+                if (imageUrl) embed.setImage(imageUrl);
 
                 try {
                     const message = await channel.send({

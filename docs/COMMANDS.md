@@ -76,7 +76,7 @@ Displays the configured news channel, news mode, and ping role. Only visible to 
 
 Show the most recent Deadlock news post based on the current news mode.
 
-Fetches live from the Steam News API and posts the latest entry as an embed.
+Fetches live from the Steam News API and posts the latest entry as an embed, with the title linking to the original post and a preview image when available.
 
 ---
 
