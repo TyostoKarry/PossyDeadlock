@@ -1,4 +1,5 @@
 import { EmbedBuilder } from 'discord.js';
+import { VERSION } from '../../utils/version.js';
 
 export const buildGeneralEmbed = (): EmbedBuilder =>
     new EmbedBuilder()
@@ -15,4 +16,6 @@ export const buildGeneralEmbed = (): EmbedBuilder =>
                 value: '- **News** — patch notes & config (Manage Server)\n- **Heroes** — hero stats, matchups, and lookups',
             },
         )
-        .setFooter({ text: 'Use /help <topic> to see more about a specific topic.' });
+        .setFooter({
+            text: `PossyDeadlock v${VERSION} • Use /help <topic> to see more about a specific topic.`,
+        });
