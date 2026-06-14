@@ -11,6 +11,7 @@ interface Command {
     execute: (interaction: unknown) => Promise<void>;
     autocomplete?: (interaction: unknown) => Promise<void>;
     handleButton?: (interaction: unknown) => Promise<void>;
+    handleSelectMenu?: (interaction: unknown) => Promise<void>;
 }
 
 declare module 'discord.js' {
@@ -68,6 +69,19 @@ client.on(Events.InteractionCreate, async (interaction) => {
             await command.handleButton(interaction);
         } catch (error) {
             logger.error('Error handling button interaction', error);
+        }
+        return;
+    }
+
+    if (interaction.isStringSelectMenu()) {
+        const [commandName = ''] = interaction.customId.split(':');
+        const command = client.commands.get(commandName);
+        if (!command?.handleSelectMenu) return;
+
+        try {
+            await command.handleSelectMenu(interaction);
+        } catch (error) {
+            logger.error('Error handling select menu interaction', error);
         }
         return;
     }

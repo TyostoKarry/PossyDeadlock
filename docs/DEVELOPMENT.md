@@ -94,6 +94,12 @@ This uses `tsx` to run TypeScript directly without compiling, and reads from `.e
 ```
 src/
   commands/
+    help/
+      index.ts        — /help command registration, routing, and topic select menu
+      deadlockApi.ts  — Deadlock API topic embed
+      general.ts      — General topic embed (default)
+      heroes.ts       — Heroes topic embed
+      news.ts         — News topic embed
     heroes/
       index.ts        — /heroes command registration, routing, autocomplete, and button handling
       list.ts         — list subcommand (sorting and pagination)

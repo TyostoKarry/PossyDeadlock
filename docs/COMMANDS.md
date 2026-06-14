@@ -1,9 +1,24 @@
 # Commands
 
-Commands are split into two groups:
-
+- `/help` — available to everyone. Quick in-Discord reference with an interactive topic dropdown.
 - `/news` — require **Manage Server** permission
 - `/heroes` — available to everyone. Hero data comes from [deadlock-api.com](https://deadlock-api.com) and refreshes daily; win rate and pick rate figures are based on Phantom 1+ ranked matches.
+
+## `/help [topic]`
+
+Show help and command information. Only visible to you.
+
+| Option | Required | Description |
+|---|---|---|
+| `topic` | No | `General` (default), `Deadlock API`, `Heroes`, or `News`. Shows a quick reference for that topic. |
+
+Includes a dropdown to switch between topics without re-running the command.
+
+**Examples:**
+- `/help` — shows general info, data sources, and a list of command groups
+- `/help topic:Heroes` — shows a quick reference for `/heroes` commands
+
+---
 
 ## `/news set-channel [channel]`
 
@@ -82,7 +97,7 @@ Displays hero type and complexity, base stats (HP, move speed, sprint speed, sta
 
 ## `/heroes matchup <hero>`
 
-Show synergies and counters for a specific hero.
+Show best/worst synergies and counters for a specific hero.
 
 | Option | Required | Description |
 |---|---|---|

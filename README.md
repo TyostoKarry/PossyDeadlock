@@ -13,6 +13,19 @@ A Discord bot that automatically posts Deadlock news and patch notes to your ser
 
 ## Commands
 
+### `/help [topic]`
+
+Available to everyone. Replies are only visible to you.
+
+| Command | Description |
+|---|---|
+| `/help` | Show general info, data sources, and a list of command groups. |
+| `/help topic:Deadlock API` | Show info about deadlock-api.com and how it's used. |
+| `/help topic:Heroes` | Show a quick reference for `/heroes` commands. |
+| `/help topic:News` | Show a quick reference for `/news` commands. |
+
+Includes a dropdown to switch between topics without re-running the command.
+
 ### `/news`
 
 Requires **Manage Server** permission.
