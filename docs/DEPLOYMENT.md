@@ -3,7 +3,7 @@
 ## Prerequisites
 
 - A Linux server
-- Node.js >= 24.14.1
+- Node.js >= 24.17.0
 - npm >= 11.10.0
 - [pm2](https://pm2.keymetrics.io/) for process management
 

@@ -2,7 +2,7 @@
 
 ## Prerequisites
 
-- Node.js >= 24.14.1
+- Node.js >= 24.17.0
 - npm >= 11.10.0
 
 If you use [nvm](https://github.com/nvm-sh/nvm), run `nvm use` in the project root to automatically use the correct version.
