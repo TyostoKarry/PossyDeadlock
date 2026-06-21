@@ -5,11 +5,16 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.2.1] - 2026-06-21
 
 ### Fixed
 
 - Hero pick rates were drastically too low — the calculation divided Phantom 1+ hero matches by the total match count across all ranks. The denominator is now scoped to the same Phantom 1+ bracket.
+
+### Security
+
+- Updated the Node.js requirement to 24.17.0 to pick up the June 2026 security releases
+- Resolved all reported dependency vulnerabilities — bumped esbuild and pinned undici to a patched release via `overrides`
 
 ## [0.2.0] - 2026-06-14
 
@@ -60,7 +65,7 @@ Initial release. The bot monitors the Steam News API and posts Deadlock updates 
 - `/news config` — view current configuration
 - `/news last-post` — fetch the latest post on demand
 
-[Unreleased]: https://github.com/TyostoKarry/PossyDeadlock/compare/v0.2.0...HEAD
+[0.2.1]: https://github.com/TyostoKarry/PossyDeadlock/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/TyostoKarry/PossyDeadlock/compare/v0.1.1...v0.2.0
 [0.1.1]: https://github.com/TyostoKarry/PossyDeadlock/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/TyostoKarry/PossyDeadlock/releases/tag/v0.1.0
