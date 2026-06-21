@@ -4,7 +4,7 @@ import {
     fetchHeroStats,
     fetchHeroCounterStats,
     fetchHeroSynergyStats,
-    fetchTotalMatchCount,
+    fetchTotalMatchCountForBadge,
 } from '../utils/deadlockApi.js';
 import { upsertHero, upsertHeroMatchup, upsertHeroSynergy } from '../db/database.js';
 import { logger } from '../utils/logger.js';
@@ -16,7 +16,7 @@ const poll = async (): Promise<void> => {
         const heroStats = await fetchHeroStats();
         const counterStats = await fetchHeroCounterStats();
         const synergyStats = await fetchHeroSynergyStats();
-        const totalMatches = await fetchTotalMatchCount();
+        const totalMatchesForBadge = await fetchTotalMatchCountForBadge();
 
         const statsMap = new Map(heroStats.map((stats) => [stats.hero_id, stats]));
 
@@ -35,7 +35,8 @@ const poll = async (): Promise<void> => {
                 stamina: hero.starting_stats?.stamina?.value ?? null,
                 sprint_speed: hero.starting_stats?.sprint_speed?.value ?? null,
                 win_rate: stats ? stats.wins / stats.matches : null,
-                pick_rate: stats && totalMatches > 0 ? stats.matches / totalMatches : null,
+                pick_rate:
+                    stats && totalMatchesForBadge > 0 ? stats.matches / totalMatchesForBadge : null,
                 matches: stats?.matches ?? null,
             });
         }

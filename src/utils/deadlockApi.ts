@@ -13,6 +13,7 @@ import type {
 } from '../schemas/heroes.js';
 
 const BASE_URL = 'https://api.deadlock-api.com';
+// All analytics calls below are scoped to this badge floor (90 = Phantom 1+).
 const MIN_BADGE = 90;
 
 async function apiFetch<T>(path: string, schema: z.ZodSchema<T>): Promise<T> {
@@ -42,9 +43,9 @@ export const fetchHeroSynergyStats = (): Promise<ApiHeroSynergyStat[]> =>
         z.array(ApiHeroSynergyStatSchema),
     );
 
-export const fetchTotalMatchCount = async (): Promise<number> => {
+export const fetchTotalMatchCountForBadge = async (): Promise<number> => {
     const stats = await apiFetch<Array<{ total_matches: number }>>(
-        '/v1/analytics/game-stats',
+        `/v1/analytics/game-stats?min_average_badge=${MIN_BADGE}`,
         z.array(z.object({ total_matches: z.number() })),
     );
     return stats[0]?.total_matches ?? 0;
