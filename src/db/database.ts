@@ -37,6 +37,18 @@ for (const [i, migration] of migrations.slice(currentVersion).entries()) {
 
 db.exec(`DELETE FROM seen_posts WHERE seen_at < datetime('now', '-30 days')`);
 
+export const runInTransaction = <T>(fn: () => T): T => {
+    db.exec('BEGIN');
+    try {
+        const result = fn();
+        db.exec('COMMIT');
+        return result;
+    } catch (error) {
+        db.exec('ROLLBACK');
+        throw error;
+    }
+};
+
 export const getNewsChannel = (guildId: string): string | null => {
     const stmt = db.prepare('SELECT channel_id FROM config WHERE guild_id = ?');
     const row = stmt.get(guildId) as { channel_id: string } | undefined;
@@ -91,9 +103,8 @@ export const markPostSeen = (guildId: string, postId: string): void => {
     );
 };
 
-export const upsertHero = (hero: Omit<Hero, 'updated_at'>): void => {
-    db.prepare(
-        `INSERT INTO heroes (id, name, image_url, hero_type, complexity, base_hp, hp_per_boon, move_speed, stamina, sprint_speed, win_rate, pick_rate, matches, updated_at)
+const upsertHeroStatement = db.prepare(
+    `INSERT INTO heroes (id, name, image_url, hero_type, complexity, base_hp, hp_per_boon, move_speed, stamina, sprint_speed, win_rate, pick_rate, matches, updated_at)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
          ON CONFLICT(id) DO UPDATE SET
            name = excluded.name,
@@ -109,7 +120,10 @@ export const upsertHero = (hero: Omit<Hero, 'updated_at'>): void => {
            pick_rate = excluded.pick_rate,
            matches = excluded.matches,
            updated_at = CURRENT_TIMESTAMP`,
-    ).run(
+);
+
+export const upsertHero = (hero: Omit<Hero, 'updated_at'>): void => {
+    upsertHeroStatement.run(
         hero.id,
         hero.name,
         hero.image_url,
@@ -126,20 +140,30 @@ export const upsertHero = (hero: Omit<Hero, 'updated_at'>): void => {
     );
 };
 
+const upsertHeroMatchupStatement = db.prepare(
+    `INSERT INTO hero_matchups (hero_id, enemy_id, win_rate, matches)
+         VALUES (?, ?, ?, ?)
+         ON CONFLICT(hero_id, enemy_id) DO UPDATE SET
+           win_rate = excluded.win_rate,
+           matches = excluded.matches`,
+);
+
 export const upsertHeroMatchup = (
     heroId: number,
     enemyId: number,
     winRate: number,
     matches: number,
 ): void => {
-    db.prepare(
-        `INSERT INTO hero_matchups (hero_id, enemy_id, win_rate, matches)
+    upsertHeroMatchupStatement.run(heroId, enemyId, winRate, matches);
+};
+
+const upsertHeroSynergyStatement = db.prepare(
+    `INSERT INTO hero_synergies (hero_id, ally_id, win_rate, matches)
          VALUES (?, ?, ?, ?)
-         ON CONFLICT(hero_id, enemy_id) DO UPDATE SET
+         ON CONFLICT(hero_id, ally_id) DO UPDATE SET
            win_rate = excluded.win_rate,
            matches = excluded.matches`,
-    ).run(heroId, enemyId, winRate, matches);
-};
+);
 
 export const upsertHeroSynergy = (
     heroId: number,
@@ -147,13 +171,7 @@ export const upsertHeroSynergy = (
     winRate: number,
     matches: number,
 ): void => {
-    db.prepare(
-        `INSERT INTO hero_synergies (hero_id, ally_id, win_rate, matches)
-         VALUES (?, ?, ?, ?)
-         ON CONFLICT(hero_id, ally_id) DO UPDATE SET
-           win_rate = excluded.win_rate,
-           matches = excluded.matches`,
-    ).run(heroId, allyId, winRate, matches);
+    upsertHeroSynergyStatement.run(heroId, allyId, winRate, matches);
 };
 
 export const getAllHeroes = (): Hero[] =>
