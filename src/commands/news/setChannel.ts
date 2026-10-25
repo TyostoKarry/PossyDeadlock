@@ -1,6 +1,12 @@
 import { ChatInputCommandInteraction, MessageFlags, TextChannel } from 'discord.js';
-import { clearNewsChannel, setNewsChannel } from '../../db/database.js';
+import {
+    clearNewsChannel,
+    getNewsChannel,
+    markPostSeen,
+    setNewsChannel,
+} from '../../db/database.js';
 import { logger } from '../../utils/logger.js';
+import { fetchDeadlockNews } from '../../utils/steamApi.js';
 
 export const handleSetChannel = async (interaction: ChatInputCommandInteraction): Promise<void> => {
     const channel = interaction.options.getChannel('channel');
@@ -21,6 +27,16 @@ export const handleSetChannel = async (interaction: ChatInputCommandInteraction)
             flags: MessageFlags.Ephemeral,
         });
         return;
+    }
+
+    // First-time setup: skip the existing feed so the first poll doesn't post a backlog
+    if (!getNewsChannel(interaction.guildId!)) {
+        try {
+            const posts = await fetchDeadlockNews();
+            for (const post of posts) markPostSeen(interaction.guildId!, post.gid);
+        } catch (error) {
+            logger.error(`[${interaction.guildId}] Failed to skip existing news feed`, error);
+        }
     }
 
     setNewsChannel(interaction.guildId!, channel.id);

@@ -35,10 +35,10 @@ const poll = async (client: Client<true>): Promise<void> => {
                 mode === 'official' ? posts.filter((p) => p.feedname === OFFICIAL_FEED) : posts;
 
             for (const post of filteredPosts) {
-                if (isPostSeen(post.gid)) continue;
+                if (isPostSeen(guild.id, post.gid)) continue;
 
-                logger.info(`Attempting to post: "${post.title}" [${post.gid}]`);
-                markPostSeen(post.gid); // mark first so failed sends don't retry forever
+                logger.info(`[${guild.id}] Attempting to post: "${post.title}" [${post.gid}]`);
+                markPostSeen(guild.id, post.gid); // mark first so failed sends don't retry forever
 
                 const description = stripHtml(post.contents).slice(0, 300);
                 const embed = new EmbedBuilder()
@@ -61,7 +61,7 @@ const poll = async (client: Client<true>): Promise<void> => {
                         ...(roleId ? { content: `<@&${roleId}>` } : {}),
                         embeds: [embed],
                     });
-                    logger.info(`Posted: "${post.title}" [${post.gid}]`);
+                    logger.info(`[${guild.id}] Posted: "${post.title}" [${post.gid}]`);
 
                     if (post.feedname === OFFICIAL_FEED) {
                         const sections = splitIntoSections(post.contents);
@@ -75,11 +75,14 @@ const poll = async (client: Client<true>): Promise<void> => {
                         }
 
                         logger.info(
-                            `Created thread for: "${post.title}" with ${sections.length} section(s)`,
+                            `[${guild.id}] Created thread for: "${post.title}" with ${sections.length} section(s)`,
                         );
                     }
                 } catch (error) {
-                    logger.error(`Failed to post: "${post.title}" [${post.gid}]`, error);
+                    logger.error(
+                        `[${guild.id}] Failed to post: "${post.title}" [${post.gid}]`,
+                        error,
+                    );
                 }
             }
         }

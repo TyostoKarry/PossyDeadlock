@@ -65,13 +65,18 @@ export const setPingRole = (guildId: string, roleId: string | null): void => {
     db.prepare('UPDATE config SET role_id = ? WHERE guild_id = ?').run(roleId, guildId);
 };
 
-export const isPostSeen = (postId: string): boolean => {
-    const row = db.prepare('SELECT 1 FROM seen_posts WHERE post_id = ?').get(postId);
+export const isPostSeen = (guildId: string, postId: string): boolean => {
+    const row = db
+        .prepare('SELECT 1 FROM seen_posts WHERE guild_id = ? AND post_id = ?')
+        .get(guildId, postId);
     return row !== undefined;
 };
 
-export const markPostSeen = (postId: string): void => {
-    db.prepare('INSERT OR IGNORE INTO seen_posts (post_id) VALUES (?)').run(postId);
+export const markPostSeen = (guildId: string, postId: string): void => {
+    db.prepare('INSERT OR IGNORE INTO seen_posts (guild_id, post_id) VALUES (?, ?)').run(
+        guildId,
+        postId,
+    );
 };
 
 export const upsertHero = (hero: Omit<Hero, 'updated_at'>): void => {
