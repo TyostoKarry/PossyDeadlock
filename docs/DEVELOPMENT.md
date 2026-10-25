@@ -84,8 +84,10 @@ This uses `tsx` to run TypeScript directly without compiling, and reads from `.e
 | `npm run start` | Run compiled production build using `.env` |
 | `npm run deploy` | Register slash commands using production `.env` |
 | `npm run deploy:dev` | Register slash commands using `.env.dev` |
-| `npm run lint` | Run ESLint |
-| `npm run format` | Run Prettier |
+| `npm run lint` | Check code with ESLint |
+| `npm run lint:fix` | Fix ESLint issues that can be fixed automatically |
+| `npm run format` | Check formatting with Prettier |
+| `npm run format:fix` | Format code with Prettier |
 | `npm run clear-seen` | Clear seen posts from production DB |
 | `npm run clear-seen:dev` | Clear seen posts from dev DB |
 
@@ -149,7 +151,13 @@ Database tables for hero data are created by the migrations in `src/db/migration
 
 ## Linting and Formatting
 
+The plain scripts only check and never change files; the `:fix` variants write changes:
+
 ```bash
-npm run lint
-npm run format
+npm run lint          # check
+npm run format        # check
+npm run lint:fix      # auto-fix
+npm run format:fix    # auto-format
 ```
+
+CI runs `format`, `lint`, and `build` on every pull request to `main`, and the PR can't be merged until it passes.

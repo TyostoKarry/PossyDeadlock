@@ -41,7 +41,7 @@ Updates **both** `package.json` and `package-lock.json` version fields — no in
 Version first, then changelog (separate commits):
 
 ```bash
-npm run format && npm run build && npm run lint
+npm run format && npm run lint && npm run build
 
 git add package.json package-lock.json
 git commit -m "Bump version to X.Y.Z"
@@ -80,7 +80,7 @@ Update production as described in [DEPLOYMENT.md § Updating](DEPLOYMENT.md#upda
 - [ ] Prepare-vX.Y.Z issue filed (Release template)
 - [ ] `npm version X.Y.Z --no-git-tag-version` (bumps package.json + lock)
 - [ ] CHANGELOG: `[Unreleased]` → `[X.Y.Z] - <date>`, new empty `[Unreleased]` added, every change represented, compare links updated
-- [ ] `npm run format && npm run build && npm run lint` clean
+- [ ] `npm run format && npm run lint && npm run build` clean
 - [ ] Prepare PR merged into `main`
 - [ ] `git checkout main && git pull && git tag vX.Y.Z && git push origin vX.Y.Z`
 - [ ] GitHub Release published with the `[X.Y.Z]` notes, marked **Latest**
