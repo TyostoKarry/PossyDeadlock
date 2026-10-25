@@ -13,17 +13,43 @@ const dbPath = join(__dirname, `../../data/database${isDev ? '.dev' : ''}.sqlite
 mkdirSync(join(__dirname, '../../data'), { recursive: true });
 
 const db = new DatabaseSync(dbPath);
+db.exec('PRAGMA journal_mode = WAL');
+db.exec('PRAGMA busy_timeout = 5000');
 
 const currentVersion = (db.prepare('PRAGMA user_version').get() as { user_version: number })
     .user_version;
 
 for (const [i, migration] of migrations.slice(currentVersion).entries()) {
-    db.exec(migration);
-    db.exec(`PRAGMA user_version = ${currentVersion + i + 1}`);
-    logger.info(`DB: applied migration ${currentVersion + i + 1}`);
+    const version = currentVersion + i + 1;
+    db.exec('BEGIN');
+    try {
+        db.exec(migration);
+        db.exec(`PRAGMA user_version = ${version}`);
+        db.exec('COMMIT');
+        logger.info(`DB: applied migration ${version}`);
+    } catch (error) {
+        db.exec('ROLLBACK');
+        logger.error(
+            `DB: migration ${version} failed, rolled back to version ${version - 1}`,
+            error,
+        );
+        throw error;
+    }
 }
 
 db.exec(`DELETE FROM seen_posts WHERE seen_at < datetime('now', '-30 days')`);
+
+export const runInTransaction = <T>(fn: () => T): T => {
+    db.exec('BEGIN');
+    try {
+        const result = fn();
+        db.exec('COMMIT');
+        return result;
+    } catch (error) {
+        db.exec('ROLLBACK');
+        throw error;
+    }
+};
 
 export const getNewsChannel = (guildId: string): string | null => {
     const stmt = db.prepare('SELECT channel_id FROM config WHERE guild_id = ?');
@@ -79,9 +105,14 @@ export const markPostSeen = (guildId: string, postId: string): void => {
     );
 };
 
-export const upsertHero = (hero: Omit<Hero, 'updated_at'>): void => {
-    db.prepare(
-        `INSERT INTO heroes (id, name, image_url, hero_type, complexity, base_hp, hp_per_boon, move_speed, stamina, sprint_speed, win_rate, pick_rate, matches, updated_at)
+export const clearHeroData = (): void => {
+    db.exec('DELETE FROM hero_matchups');
+    db.exec('DELETE FROM hero_synergies');
+    db.exec('DELETE FROM heroes');
+};
+
+const upsertHeroStatement = db.prepare(
+    `INSERT INTO heroes (id, name, image_url, hero_type, complexity, base_hp, hp_per_boon, move_speed, stamina, sprint_speed, win_rate, pick_rate, matches, updated_at)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
          ON CONFLICT(id) DO UPDATE SET
            name = excluded.name,
@@ -97,7 +128,10 @@ export const upsertHero = (hero: Omit<Hero, 'updated_at'>): void => {
            pick_rate = excluded.pick_rate,
            matches = excluded.matches,
            updated_at = CURRENT_TIMESTAMP`,
-    ).run(
+);
+
+export const upsertHero = (hero: Omit<Hero, 'updated_at'>): void => {
+    upsertHeroStatement.run(
         hero.id,
         hero.name,
         hero.image_url,
@@ -114,20 +148,30 @@ export const upsertHero = (hero: Omit<Hero, 'updated_at'>): void => {
     );
 };
 
+const upsertHeroMatchupStatement = db.prepare(
+    `INSERT INTO hero_matchups (hero_id, enemy_id, win_rate, matches)
+         VALUES (?, ?, ?, ?)
+         ON CONFLICT(hero_id, enemy_id) DO UPDATE SET
+           win_rate = excluded.win_rate,
+           matches = excluded.matches`,
+);
+
 export const upsertHeroMatchup = (
     heroId: number,
     enemyId: number,
     winRate: number,
     matches: number,
 ): void => {
-    db.prepare(
-        `INSERT INTO hero_matchups (hero_id, enemy_id, win_rate, matches)
+    upsertHeroMatchupStatement.run(heroId, enemyId, winRate, matches);
+};
+
+const upsertHeroSynergyStatement = db.prepare(
+    `INSERT INTO hero_synergies (hero_id, ally_id, win_rate, matches)
          VALUES (?, ?, ?, ?)
-         ON CONFLICT(hero_id, enemy_id) DO UPDATE SET
+         ON CONFLICT(hero_id, ally_id) DO UPDATE SET
            win_rate = excluded.win_rate,
            matches = excluded.matches`,
-    ).run(heroId, enemyId, winRate, matches);
-};
+);
 
 export const upsertHeroSynergy = (
     heroId: number,
@@ -135,13 +179,7 @@ export const upsertHeroSynergy = (
     winRate: number,
     matches: number,
 ): void => {
-    db.prepare(
-        `INSERT INTO hero_synergies (hero_id, ally_id, win_rate, matches)
-         VALUES (?, ?, ?, ?)
-         ON CONFLICT(hero_id, ally_id) DO UPDATE SET
-           win_rate = excluded.win_rate,
-           matches = excluded.matches`,
-    ).run(heroId, allyId, winRate, matches);
+    upsertHeroSynergyStatement.run(heroId, allyId, winRate, matches);
 };
 
 export const getAllHeroes = (): Hero[] =>

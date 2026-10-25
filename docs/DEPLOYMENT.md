@@ -99,6 +99,27 @@ pm2 restart possydeadlock
 
 If the update added or changed slash commands, run `npm run deploy` before restarting.
 
+## Backups
+
+```bash
+npm run backup
+```
+
+This writes a consistent copy of the database to `data/database-backup-<timestamp>.sqlite` using SQLite's `VACUUM INTO`. It's safe to run while the bot is running. Don't back up by copying `database.sqlite` while the bot is running: the database runs in WAL mode, so recent writes may still be in `database.sqlite-wal`, and a copy taken mid-write can be inconsistent.
+
+The first start after upgrading to WAL mode switches the database over, so don't run `backup` or `clear-seen` at the same moment.
+
+To restore a backup:
+
+```bash
+pm2 stop possydeadlock
+cp data/database-backup-<timestamp>.sqlite data/database.sqlite
+rm -f data/database.sqlite-wal data/database.sqlite-shm
+pm2 start possydeadlock
+```
+
+Remove the leftover `-wal` and `-shm` files before starting. Otherwise SQLite applies the old log to the restored file, which can corrupt it.
+
 ## Hero Data
 
 The `/heroes` commands are backed by data from [deadlock-api.com](https://deadlock-api.com), a public API that requires no API key or extra configuration. The bot fetches hero stats, matchups, and synergies on startup and then daily at 06:00 (server time), storing them in the same SQLite database used for news settings. The required tables are created automatically by the built-in migration runner.
