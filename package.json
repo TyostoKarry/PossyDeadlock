@@ -30,22 +30,18 @@
     "clear-seen:dev": "node --env-file=.env.dev --input-type=module --eval \"import { DatabaseSync } from 'node:sqlite'; const db = new DatabaseSync('./data/database.dev.sqlite'); db.exec('DELETE FROM seen_posts'); console.log('Cleared seen posts');\""
   },
   "dependencies": {
-    "discord.js": "^14.26.4",
-    "node-cron": "^4.2.1",
+    "discord.js": "^14.27.0",
+    "node-cron": "^4.6.0",
     "zod": "^4.6.7"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
-    "@types/node": "^25.9.1",
-    "@types/node-cron": "^3.0.11",
-    "eslint": "^10.4.0",
+    "@types/node": "^24.19.2",
+    "eslint": "^10.13.0",
     "eslint-config-prettier": "^10.1.8",
-    "prettier": "^3.8.3",
-    "tsx": "^4.22.3",
+    "prettier": "^3.9.10",
+    "tsx": "^4.23.15",
     "typescript": "^6.0.3",
-    "typescript-eslint": "^8.59.4"
-  },
-  "overrides": {
-    "undici": "^6.27.0"
+    "typescript-eslint": "^8.72.0"
   }
 }
