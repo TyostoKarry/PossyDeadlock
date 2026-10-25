@@ -18,9 +18,21 @@ const currentVersion = (db.prepare('PRAGMA user_version').get() as { user_versio
     .user_version;
 
 for (const [i, migration] of migrations.slice(currentVersion).entries()) {
-    db.exec(migration);
-    db.exec(`PRAGMA user_version = ${currentVersion + i + 1}`);
-    logger.info(`DB: applied migration ${currentVersion + i + 1}`);
+    const version = currentVersion + i + 1;
+    db.exec('BEGIN');
+    try {
+        db.exec(migration);
+        db.exec(`PRAGMA user_version = ${version}`);
+        db.exec('COMMIT');
+        logger.info(`DB: applied migration ${version}`);
+    } catch (error) {
+        db.exec('ROLLBACK');
+        logger.error(
+            `DB: migration ${version} failed, rolled back to version ${version - 1}`,
+            error,
+        );
+        throw error;
+    }
 }
 
 db.exec(`DELETE FROM seen_posts WHERE seen_at < datetime('now', '-30 days')`);
