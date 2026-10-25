@@ -103,6 +103,12 @@ export const markPostSeen = (guildId: string, postId: string): void => {
     );
 };
 
+export const clearHeroData = (): void => {
+    db.exec('DELETE FROM hero_matchups');
+    db.exec('DELETE FROM hero_synergies');
+    db.exec('DELETE FROM heroes');
+};
+
 const upsertHeroStatement = db.prepare(
     `INSERT INTO heroes (id, name, image_url, hero_type, complexity, base_hp, hp_per_boon, move_speed, stamina, sprint_speed, win_rate, pick_rate, matches, updated_at)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)

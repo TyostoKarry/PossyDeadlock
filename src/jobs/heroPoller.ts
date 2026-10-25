@@ -7,6 +7,7 @@ import {
     fetchTotalMatchCountForBadge,
 } from '../utils/deadlockApi.js';
 import {
+    clearHeroData,
     runInTransaction,
     upsertHero,
     upsertHeroMatchup,
@@ -23,9 +24,21 @@ const poll = async (): Promise<void> => {
         const synergyStats = await fetchHeroSynergyStats();
         const totalMatchesForBadge = await fetchTotalMatchCountForBadge();
 
+        if (
+            heroAssets.length === 0 ||
+            heroStats.length === 0 ||
+            counterStats.length === 0 ||
+            synergyStats.length === 0
+        ) {
+            logger.warn('Hero poller: API returned an empty list, keeping existing data');
+            return;
+        }
+
         const statsMap = new Map(heroStats.map((stats) => [stats.hero_id, stats]));
 
         runInTransaction(() => {
+            clearHeroData();
+
             for (const hero of heroAssets) {
                 const stats = statsMap.get(hero.id);
                 upsertHero({
