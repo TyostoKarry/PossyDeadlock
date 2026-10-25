@@ -90,6 +90,8 @@ This uses `tsx` to run TypeScript directly without compiling, and reads from `.e
 | `npm run format:fix` | Format code with Prettier |
 | `npm run clear-seen` | Clear seen posts from production DB |
 | `npm run clear-seen:dev` | Clear seen posts from dev DB |
+| `npm run backup` | Back up the production DB to `data/` (safe while the bot is running) |
+| `npm run backup:dev` | Back up the dev DB to `data/` |
 
 ## Project Structure
 
@@ -121,7 +123,8 @@ src/
       001_initial.ts              — initial schema (news settings, seen posts)
       002_hero_tables.ts          — hero, matchup, and synergy tables
       003_hero_type_complexity.ts — adds hero type and complexity columns
-      index.ts                    — migration runner (PRAGMA user_version)
+      004_seen_posts_per_guild.ts — tracks seen posts per server
+      index.ts                    — ordered list of migrations
   jobs/
     heroPoller.ts     — cron job for polling deadlock-api.com (on startup, then daily at 06:00)
     newsPoller.ts     — cron job for polling Steam news (every 5 minutes)
@@ -136,18 +139,22 @@ src/
     steamApi.ts       — Steam News API client
   index.ts            — bot entry point
   deploy.ts           — slash command registration script
+scripts/
+  backup.mjs          — database backup script (VACUUM INTO)
 data/
   database.sqlite     — production SQLite database (gitignored)
   database.dev.sqlite — development SQLite database (gitignored)
 ```
 
+The database runs in WAL mode, so `-wal` and `-shm` files may appear next to it while the bot is running. Don't delete them while the bot is running: they can hold recent writes.
+
 ## Hero Data
 
 Hero stats, matchups, and synergies are stored in the database and kept up to date by `src/jobs/heroPoller.ts`, which runs once on startup and then daily at 06:00 (server time).
 
-The poller fetches data from [deadlock-api.com](https://deadlock-api.com) via `src/utils/deadlockApi.ts`, validates the responses against the zod schemas in `src/schemas/heroes.ts`, and upserts them using `upsertHero`, `upsertHeroMatchup`, and `upsertHeroSynergy` from `src/db/database.ts`. All hero stat endpoints are filtered to Phantom 1+ ranked matches (`min_average_badge=90`).
+The poller fetches data from [deadlock-api.com](https://deadlock-api.com) via `src/utils/deadlockApi.ts`, validates the responses against the zod schemas in `src/schemas/heroes.ts`, and writes them in a single transaction: `clearHeroData` empties the hero tables, then `upsertHero`, `upsertHeroMatchup`, and `upsertHeroSynergy` from `src/db/database.ts` write the fresh data. Commands therefore see either the old data or the new, never a half-finished refresh, and heroes or pairs the API no longer returns are removed. If any response is an empty list, the refresh is skipped and the existing data is kept. All hero stat endpoints are filtered to Phantom 1+ ranked matches (`min_average_badge=90`).
 
-Database tables for hero data are created by the migrations in `src/db/migrations/`, which run automatically on startup via a `PRAGMA user_version`-based migration runner.
+Database tables for hero data are created by the migrations in `src/db/migrations/`, which run automatically on startup via a `PRAGMA user_version`-based migration runner in `src/db/database.ts`. Each migration runs in a transaction with its version bump, so a failed migration leaves the database at the previous version.
 
 ## Linting and Formatting
 

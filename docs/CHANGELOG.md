@@ -7,7 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `npm run backup` writes a consistent copy of the database to `data/`, safe to run while the bot is running. See the Backups section in DEPLOYMENT.md for how to restore one.
+
+### Changed
+
+- Database upgrades now run atomically. A failed upgrade leaves the database at its previous version and logs which migration failed, instead of leaving it half-upgraded.
+- The database now uses SQLite's WAL mode. `database.sqlite-wal` and `database.sqlite-shm` files may appear next to the database while the bot is running; don't delete them while it runs.
+
 ### Fixed
+
+- `/heroes` no longer shows heroes that were removed from the game, or matchup and synergy stats for pairs that dropped below the 100-match minimum. Each daily refresh now replaces the hero data instead of only adding to it.
 
 - News posts now reach every server with a news channel set. Previously each post went only to the first server that accepted it, so other servers missed it (for example, an official post went to one server and never reached the others). Existing seen posts carry over on upgrade, so nothing is posted again.
 - `zod` is now a production dependency — it was listed as a dev dependency despite being used at runtime, so deploying with `npm ci --omit=dev` would crash the bot on startup
