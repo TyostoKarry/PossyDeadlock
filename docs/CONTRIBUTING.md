@@ -59,13 +59,29 @@ If the change affects how the bot is used or run, update the matching docs in th
 ### 6. Check and open the PR
 
 ```bash
-npm run format && npm run build && npm run lint
+npm run format:fix && npm run lint:fix && npm run build
 ```
 
-All three must pass cleanly. Then open the PR against `main`:
+This formats the code, fixes what ESLint can fix automatically, and compiles. All three must pass cleanly. CI runs the check-only versions (`npm run format`, `npm run lint`, `npm run build`) on every PR, so anything missed here fails the PR. Then open the PR against `main`:
 
 - **Title:** the issue title
 - **Body:** a `## Summary` of what changed and why, ending with `close #<issue>` so merging closes the issue
 - If slash commands changed, run `npm run deploy:dev` and test them on the dev bot before merging
 
 Merge into `main` once it's done. Delete the branch afterwards.
+
+## CI
+
+Every pull request to `main` runs the [CI workflow](../.github/workflows/ci.yml): `npm ci`, then `npm run format`, `npm run lint`, and `npm run build`. These are the same check-only scripts you can run locally.
+
+`main` is protected: changes only land through a pull request, the **Verify** check must pass, and the branch must be up to date with `main` before merging.
+
+If CI fails, open the failing step in the PR's **Checks** tab, then:
+
+| Failing step | Fix locally |
+|---|---|
+| Check formatting | `npm run format:fix` |
+| Run linter | `npm run lint:fix`, then fix anything it reports that it can't fix itself |
+| Build project | `npm run build` and fix the type errors it reports |
+
+Commit the fix and push; CI reruns automatically.
