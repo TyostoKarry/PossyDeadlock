@@ -15,5 +15,11 @@ export default tseslint.config(
       '@typescript-eslint/explicit-function-return-type': 'warn',
       'no-console': 'off',
     }
-  }
+  },
+  {
+    files: ['scripts/**/*.mjs'],
+    languageOptions: {
+      globals: { process: 'readonly', console: 'readonly' },
+    },
+  },
 );
