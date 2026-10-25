@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- `zod` is now a production dependency — it was listed as a dev dependency despite being used at runtime, so deploying with `npm ci --omit=dev` would crash the bot on startup
+
+### Security
+
+- Updated the Node.js requirement to 24.22.1 to pick up the October 2026 security release
+- Resolved all reported dependency vulnerabilities (undici, zod, brace-expansion) by updating dependencies; the undici `overrides` pin is no longer needed and was removed
+
 ## [0.2.1] - 2026-06-21
 
 ### Fixed
