@@ -57,3 +57,5 @@ See [docs/COMMANDS.md](docs/COMMANDS.md) for full details and examples.
 - [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) — production deployment with pm2
 - [docs/COMMANDS.md](docs/COMMANDS.md) — command reference
 - [docs/CHANGELOG.md](docs/CHANGELOG.md) — version history
+- [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md) — workflow for issues, branches, commits, and PRs
+- [docs/RELEASING.md](docs/RELEASING.md) — how to cut and deploy a release
