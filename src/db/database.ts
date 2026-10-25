@@ -47,8 +47,7 @@ export const clearNewsChannel = (guildId: string): void => {
 
 export const getNewsMode = (guildId: string): string => {
     const row = db.prepare('SELECT news_mode FROM config WHERE guild_id = ?').get(guildId) as
-        | { news_mode: string }
-        | undefined;
+        { news_mode: string } | undefined;
     return row?.news_mode ?? 'official';
 };
 
@@ -58,8 +57,7 @@ export const setNewsMode = (guildId: string, mode: string): void => {
 
 export const getPingRole = (guildId: string): string | null => {
     const row = db.prepare('SELECT role_id FROM config WHERE guild_id = ?').get(guildId) as
-        | { role_id: string | null }
-        | undefined;
+        { role_id: string | null } | undefined;
     return row?.role_id ?? null;
 };
 
@@ -149,8 +147,7 @@ export const getHeroById = (id: number): Hero | undefined =>
 
 export const getHeroByName = (name: string): Hero | undefined =>
     db.prepare('SELECT * FROM heroes WHERE lower(name) = lower(?)').get(name) as unknown as
-        | Hero
-        | undefined;
+        Hero | undefined;
 
 export const getHeroMatchups = (heroId: number): HeroMatchup[] =>
     db
@@ -164,5 +161,4 @@ export const getHeroSynergies = (heroId: number): HeroSynergy[] =>
 
 export const getRandomHero = (): Hero | undefined =>
     db.prepare('SELECT * FROM heroes ORDER BY RANDOM() LIMIT 1').get() as unknown as
-        | Hero
-        | undefined;
+        Hero | undefined;
