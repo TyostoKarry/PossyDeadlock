@@ -13,6 +13,8 @@ const dbPath = join(__dirname, `../../data/database${isDev ? '.dev' : ''}.sqlite
 mkdirSync(join(__dirname, '../../data'), { recursive: true });
 
 const db = new DatabaseSync(dbPath);
+db.exec('PRAGMA journal_mode = WAL');
+db.exec('PRAGMA busy_timeout = 5000');
 
 const currentVersion = (db.prepare('PRAGMA user_version').get() as { user_version: number })
     .user_version;
