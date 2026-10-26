@@ -182,26 +182,61 @@ export const upsertHeroSynergy = (
     upsertHeroSynergyStatement.run(heroId, allyId, winRate, matches);
 };
 
-export const getAllHeroes = (): Hero[] =>
-    db.prepare('SELECT * FROM heroes ORDER BY name ASC').all() as unknown as Hero[];
+interface HeroCache {
+    all: readonly Hero[];
+    byId: ReadonlyMap<number, Hero>;
+    byName: ReadonlyMap<string, Hero>;
+    matchups: ReadonlyMap<number, readonly HeroMatchup[]>;
+    synergies: ReadonlyMap<number, readonly HeroSynergy[]>;
+}
 
-export const getHeroById = (id: number): Hero | undefined =>
-    db.prepare('SELECT * FROM heroes WHERE id = ?').get(id) as unknown as Hero | undefined;
+const groupByHero = <T extends { hero_id: number }>(rows: T[]): Map<number, T[]> => {
+    const grouped = new Map<number, T[]>();
+    for (const row of rows) {
+        const group = grouped.get(row.hero_id);
+        if (group) group.push(row);
+        else grouped.set(row.hero_id, [row]);
+    }
+    return grouped;
+};
+
+const loadHeroCache = (): HeroCache => {
+    const all = db.prepare('SELECT * FROM heroes ORDER BY name ASC').all() as unknown as Hero[];
+    const matchups = db
+        .prepare('SELECT * FROM hero_matchups ORDER BY win_rate DESC')
+        .all() as unknown as HeroMatchup[];
+    const synergies = db
+        .prepare('SELECT * FROM hero_synergies ORDER BY win_rate DESC')
+        .all() as unknown as HeroSynergy[];
+
+    return {
+        all,
+        byId: new Map(all.map((hero) => [hero.id, hero])),
+        byName: new Map(all.map((hero) => [hero.name.toLowerCase(), hero])),
+        matchups: groupByHero(matchups),
+        synergies: groupByHero(synergies),
+    };
+};
+
+// Hero data only changes on the daily refresh, so reads are served from memory.
+let heroCache = loadHeroCache();
+
+export const refreshHeroCache = (): void => {
+    heroCache = loadHeroCache();
+};
+
+export const getAllHeroes = (): readonly Hero[] => heroCache.all;
+
+export const getHeroById = (id: number): Hero | undefined => heroCache.byId.get(id);
 
 export const getHeroByName = (name: string): Hero | undefined =>
-    db.prepare('SELECT * FROM heroes WHERE lower(name) = lower(?)').get(name) as unknown as
-        Hero | undefined;
+    heroCache.byName.get(name.toLowerCase());
 
-export const getHeroMatchups = (heroId: number): HeroMatchup[] =>
-    db
-        .prepare('SELECT * FROM hero_matchups WHERE hero_id = ? ORDER BY win_rate DESC')
-        .all(heroId) as unknown as HeroMatchup[];
+export const getHeroMatchups = (heroId: number): readonly HeroMatchup[] =>
+    heroCache.matchups.get(heroId) ?? [];
 
-export const getHeroSynergies = (heroId: number): HeroSynergy[] =>
-    db
-        .prepare('SELECT * FROM hero_synergies WHERE hero_id = ? ORDER BY win_rate DESC')
-        .all(heroId) as unknown as HeroSynergy[];
+export const getHeroSynergies = (heroId: number): readonly HeroSynergy[] =>
+    heroCache.synergies.get(heroId) ?? [];
 
 export const getRandomHero = (): Hero | undefined =>
-    db.prepare('SELECT * FROM heroes ORDER BY RANDOM() LIMIT 1').get() as unknown as
-        Hero | undefined;
+    heroCache.all[Math.floor(Math.random() * heroCache.all.length)];

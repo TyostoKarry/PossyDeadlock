@@ -15,9 +15,12 @@ import type {
 const BASE_URL = 'https://api.deadlock-api.com';
 // All analytics calls below are scoped to this badge floor (90 = Phantom 1+).
 const MIN_BADGE = 90;
+const REQUEST_TIMEOUT_MS = 15_000;
 
 async function apiFetch<T>(path: string, schema: z.ZodSchema<T>): Promise<T> {
-    const res = await fetch(`${BASE_URL}${path}`);
+    const res = await fetch(`${BASE_URL}${path}`, {
+        signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+    });
     if (!res.ok) throw new Error(`deadlock-api ${res.status}: ${path}`);
     return schema.parse(await res.json());
 }

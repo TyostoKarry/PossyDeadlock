@@ -34,7 +34,7 @@ const ARROWS: Record<string, string> = {
     desc: ' ▼',
 };
 
-const sortHeroes = (heroes: Hero[], sort: string, direction: string): Hero[] => {
+const sortHeroes = (heroes: readonly Hero[], sort: string, direction: string): Hero[] => {
     const sorted = [...heroes];
     const factor = direction === 'asc' ? 1 : -1;
 

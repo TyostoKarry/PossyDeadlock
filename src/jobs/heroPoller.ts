@@ -8,6 +8,7 @@ import {
 } from '../utils/deadlockApi.js';
 import {
     clearHeroData,
+    refreshHeroCache,
     runInTransaction,
     upsertHero,
     upsertHeroMatchup,
@@ -78,6 +79,8 @@ const poll = async (): Promise<void> => {
                 upsertHeroSynergy(row.hero_id2, row.hero_id1, winRate, row.matches_played);
             }
         });
+
+        refreshHeroCache();
 
         logger.info(
             `Hero poller: updated ${heroAssets.length} heroes, ${counterStats.length} counter pairs, ${synergyStats.length} synergy pairs`,
