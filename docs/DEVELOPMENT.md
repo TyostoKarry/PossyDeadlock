@@ -118,7 +118,7 @@ src/
       config.ts       — config subcommand
       lastPost.ts     — last-post subcommand
   db/
-    database.ts                   — SQLite setup and queries
+    database.ts                   — SQLite setup, queries, and the in-memory hero cache
     migrations/
       001_initial.ts              — initial schema (news settings, seen posts)
       002_hero_tables.ts          — hero, matchup, and synergy tables
@@ -133,6 +133,7 @@ src/
   types/
     heroes.ts         — Hero, HeroMatchup, and HeroSynergy types
   utils/
+    apiCache.ts       — short-lived cache for on-demand API calls
     deadlockApi.ts    — deadlock-api.com client
     formatUtils.ts    — HTML/BBCode stripping and section splitting
     logger.ts         — timestamped logger
@@ -155,6 +156,38 @@ Hero stats, matchups, and synergies are stored in the database and kept up to da
 The poller fetches data from [deadlock-api.com](https://deadlock-api.com) via `src/utils/deadlockApi.ts`, validates the responses against the zod schemas in `src/schemas/heroes.ts`, and writes them in a single transaction: `clearHeroData` empties the hero tables, then `upsertHero`, `upsertHeroMatchup`, and `upsertHeroSynergy` from `src/db/database.ts` write the fresh data. Commands therefore see either the old data or the new, never a half-finished refresh, and heroes or pairs the API no longer returns are removed. If any response is an empty list, the refresh is skipped and the existing data is kept. All hero stat endpoints are filtered to Phantom 1+ ranked matches (`min_average_badge=90`).
 
 Database tables for hero data are created by the migrations in `src/db/migrations/`, which run automatically on startup via a `PRAGMA user_version`-based migration runner in `src/db/database.ts`. Each migration runs in a transaction with its version bump, so a failed migration leaves the database at the previous version.
+
+All deadlock-api requests time out after 15 seconds, so a stalled request fails the refresh instead of hanging it.
+
+## Caching
+
+There are two caching layers, one for each kind of data.
+
+### Hero data (in memory)
+
+Hero data only changes on the daily refresh, so `src/db/database.ts` keeps a snapshot of the `heroes`, `hero_matchups`, and `hero_synergies` tables in memory. The hero getters (`getAllHeroes`, `getHeroById`, `getHeroByName`, `getHeroMatchups`, `getHeroSynergies`, `getRandomHero`) read from it, never from SQLite.
+
+- The snapshot is loaded when the database module is first imported, so data from the last refresh is served from startup.
+- The hero poller calls `refreshHeroCache()` after its transaction commits. A failed or skipped refresh leaves both the database and the snapshot unchanged.
+- The getters return shared arrays typed `readonly`. Copy before sorting or otherwise mutating them (`[...heroes].sort(...)`).
+
+Future daily-refreshed tables (e.g. ranks) should follow the same pattern: load at startup, rebuild after each successful refresh.
+
+### On-demand API calls (short-lived)
+
+Live data fetched per command (e.g. a player's matches) can't be preloaded. Wrap those fetches in a cache from `createApiCache` in `src/utils/apiCache.ts`, backed by [lru-cache](https://www.npmjs.com/package/lru-cache). Create one cache per kind of data, with its own TTL and size limit:
+
+```ts
+const matchHistoryCache = createApiCache<number, MatchHistory>({ ttlMs: 60_000, max: 500 });
+
+const history = await matchHistoryCache.get(accountId, () => fetchMatchHistory(accountId));
+```
+
+- Concurrent calls for the same key share one in-flight request.
+- Failed requests are never cached; the next call retries.
+- Entries expire after `ttlMs`, and the least recently used are evicted past `max`, so memory stays bounded.
+
+Low-frequency per-server reads (news settings, seen posts) are not cached.
 
 ## Linting and Formatting
 
