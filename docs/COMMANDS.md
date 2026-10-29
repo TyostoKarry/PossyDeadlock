@@ -4,6 +4,8 @@
 - `/news` — require **Manage Server** permission
 - `/heroes` — available to everyone. Hero data comes from [deadlock-api.com](https://deadlock-api.com) and refreshes daily; win rate and pick rate figures are based on Phantom 1+ ranked matches.
 
+Commands with a `[visibility]` option reply privately by default, so only you can see the result. Add `visibility:Public` to post the reply in the channel for everyone. Messages like "hero not found" are always private.
+
 ## `/help [topic]`
 
 Show help and command information. Only visible to you.
@@ -72,36 +74,47 @@ Displays the configured news channel, news mode, and ping role. Only visible to 
 
 ---
 
-## `/news last-post`
+## `/news last-post [visibility]`
 
 Show the most recent Deadlock news post based on the current news mode.
 
-Fetches live from the Steam News API and posts the latest entry as an embed, with the title linking to the original post and a preview image when available.
+| Option | Required | Description |
+|---|---|---|
+| `visibility` | No | `Private` (default) or `Public`. Choose `Public` to post the reply in the channel. |
+
+Fetches live from the Steam News API and shows the latest entry as an embed, with the title linking to the original post and a preview image when available.
+
+**Examples:**
+- `/news last-post` — shows the latest post, only to you
+- `/news last-post visibility:Public` — posts the latest post in the channel
 
 ---
 
-## `/heroes stats <hero>`
+## `/heroes stats <hero> [visibility]`
 
 Show base stats and performance for a specific hero.
 
 | Option | Required | Description |
 |---|---|---|
 | `hero` | Yes | The hero name. Supports autocomplete. |
+| `visibility` | No | `Private` (default) or `Public`. Choose `Public` to post the reply in the channel. |
 
 Displays hero type and complexity, base stats (HP, move speed, sprint speed, stamina), win rate, pick rate, total matches, and the heroes this hero performs best/worst against.
 
 **Examples:**
-- `/heroes stats Bebop` — shows stats for Bebop
+- `/heroes stats Bebop` — shows stats for Bebop, only to you
+- `/heroes stats Bebop visibility:Public` — posts Bebop's stats in the channel
 
 ---
 
-## `/heroes matchup <hero>`
+## `/heroes matchup <hero> [visibility]`
 
 Show best/worst synergies and counters for a specific hero.
 
 | Option | Required | Description |
 |---|---|---|
 | `hero` | Yes | The hero name. Supports autocomplete. |
+| `visibility` | No | `Private` (default) or `Public`. Choose `Public` to post the reply in the channel. |
 
 Displays the heroes this hero performs best/worst with (synergies) and best/worst against (counters), each with win rate and match count.
 
@@ -110,13 +123,14 @@ Displays the heroes this hero performs best/worst with (synergies) and best/wors
 
 ---
 
-## `/heroes list [sort]`
+## `/heroes list [sort] [visibility]`
 
 List all heroes with their win rate and pick rate, 15 per page.
 
 | Option | Required | Description |
 |---|---|---|
 | `sort` | No | `Name` (default), `Win Rate`, or `Pick Rate`. Sets the initial sort order. |
+| `visibility` | No | `Private` (default) or `Public`. Choose `Public` to post the reply in the channel. |
 
 Use the sort buttons to change the sort field, or click the active sort again to reverse its direction. Use the pagination buttons to move between pages.
 
@@ -126,11 +140,13 @@ Use the sort buttons to change the sort field, or click the active sort again to
 
 ---
 
-## `/heroes random`
+## `/heroes random [visibility]`
 
 Show a random hero with its win rate and pick rate.
 
-No options.
+| Option | Required | Description |
+|---|---|---|
+| `visibility` | No | `Private` (default) or `Public`. Choose `Public` to post the reply in the channel. |
 
 Includes a Re-roll button to get another random hero. Only the person who ran the command can re-roll.
 
