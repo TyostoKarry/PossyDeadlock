@@ -13,7 +13,7 @@ export const buildGeneralEmbed = (): EmbedBuilder =>
             },
             {
                 name: 'Command Groups',
-                value: '- **News** — patch notes & config (Manage Server)\n- **Heroes** — hero stats, matchups, and lookups',
+                value: '- **News** — patch notes & config (Manage Server)\n- **Heroes** — hero stats, matchups, and lookups\n- **Steam** — link your Steam account',
             },
         )
         .setFooter({

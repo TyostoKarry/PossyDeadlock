@@ -13,6 +13,7 @@ import { buildGeneralEmbed } from './general.js';
 import { buildNewsHelpEmbed } from './news.js';
 import { buildHeroesHelpEmbed } from './heroes.js';
 import { buildDeadlockApiHelpEmbed } from './deadlockApi.js';
+import { buildSteamHelpEmbed } from './steam.js';
 
 const TOPIC_SELECT_ID = 'help:topic';
 
@@ -21,6 +22,7 @@ const EMBED_BUILDERS: Record<string, () => EmbedBuilder> = {
     'deadlock-api': buildDeadlockApiHelpEmbed,
     heroes: buildHeroesHelpEmbed,
     news: buildNewsHelpEmbed,
+    steam: buildSteamHelpEmbed,
 };
 
 const TOPIC_OPTIONS = [
@@ -28,6 +30,7 @@ const TOPIC_OPTIONS = [
     { name: 'Deadlock API', value: 'deadlock-api' },
     { name: 'Heroes', value: 'heroes' },
     { name: 'News', value: 'news' },
+    { name: 'Steam', value: 'steam' },
 ];
 
 const buildTopicSelectRow = (selected: string): ActionRowBuilder<StringSelectMenuBuilder> =>
