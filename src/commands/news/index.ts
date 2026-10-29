@@ -4,6 +4,7 @@ import { handleSetMode } from './setMode.js';
 import { handleSetPingRole } from './setPingRole.js';
 import { handleConfig } from './config.js';
 import { handleLastPost } from './lastPost.js';
+import { addVisibilityOption } from '../../utils/visibility.js';
 
 export default {
     data: new SlashCommandBuilder()
@@ -50,7 +51,9 @@ export default {
             sub.setName('config').setDescription('Show the current Deadlock news configuration'),
         )
         .addSubcommand((sub) =>
-            sub.setName('last-post').setDescription('Show the most recent Deadlock news post'),
+            addVisibilityOption(
+                sub.setName('last-post').setDescription('Show the most recent Deadlock news post'),
+            ),
         )
         .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild),
 

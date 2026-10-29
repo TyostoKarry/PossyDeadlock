@@ -9,51 +9,60 @@ import { handleMatchup } from './matchup.js';
 import { handleStats } from './stats.js';
 import { handleRandom, handleRandomReroll } from './random.js';
 import { getAllHeroes } from '../../db/database.js';
+import { addVisibilityOption } from '../../utils/visibility.js';
 
 export default {
     data: new SlashCommandBuilder()
         .setName('heroes')
         .setDescription('Deadlock hero stats and information')
         .addSubcommand((sub) =>
-            sub
-                .setName('list')
-                .setDescription('List all heroes')
-                .addStringOption((option) =>
-                    option
-                        .setName('sort')
-                        .setDescription('How to sort the list of heroes')
-                        .addChoices(
-                            { name: 'Name', value: 'name' },
-                            { name: 'Win Rate', value: 'win_rate' },
-                            { name: 'Pick Rate', value: 'pick_rate' },
-                        ),
-                ),
+            addVisibilityOption(
+                sub
+                    .setName('list')
+                    .setDescription('List all heroes')
+                    .addStringOption((option) =>
+                        option
+                            .setName('sort')
+                            .setDescription('How to sort the list of heroes')
+                            .addChoices(
+                                { name: 'Name', value: 'name' },
+                                { name: 'Win Rate', value: 'win_rate' },
+                                { name: 'Pick Rate', value: 'pick_rate' },
+                            ),
+                    ),
+            ),
         )
         .addSubcommand((sub) =>
-            sub
-                .setName('stats')
-                .setDescription('Show stats for a specific hero')
-                .addStringOption((option) =>
-                    option
-                        .setName('hero')
-                        .setDescription('The hero name to show stats for')
-                        .setRequired(true)
-                        .setAutocomplete(true),
-                ),
+            addVisibilityOption(
+                sub
+                    .setName('stats')
+                    .setDescription('Show stats for a specific hero')
+                    .addStringOption((option) =>
+                        option
+                            .setName('hero')
+                            .setDescription('The hero name to show stats for')
+                            .setRequired(true)
+                            .setAutocomplete(true),
+                    ),
+            ),
         )
         .addSubcommand((sub) =>
-            sub
-                .setName('matchup')
-                .setDescription('Show synergies and counters for a specific hero')
-                .addStringOption((option) =>
-                    option
-                        .setName('hero')
-                        .setDescription('The hero name to show matchups for')
-                        .setRequired(true)
-                        .setAutocomplete(true),
-                ),
+            addVisibilityOption(
+                sub
+                    .setName('matchup')
+                    .setDescription('Show synergies and counters for a specific hero')
+                    .addStringOption((option) =>
+                        option
+                            .setName('hero')
+                            .setDescription('The hero name to show matchups for')
+                            .setRequired(true)
+                            .setAutocomplete(true),
+                    ),
+            ),
         )
-        .addSubcommand((sub) => sub.setName('random').setDescription('Show a random hero')),
+        .addSubcommand((sub) =>
+            addVisibilityOption(sub.setName('random').setDescription('Show a random hero')),
+        ),
 
     execute: async (interaction: ChatInputCommandInteraction): Promise<void> => {
         const sub = interaction.options.getSubcommand();

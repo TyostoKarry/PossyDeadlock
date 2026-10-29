@@ -36,7 +36,7 @@ Requires **Manage Server** permission.
 | `/news set-mode <mode>` | `official` (default) or `all` news mode. |
 | `/news set-ping-role [role]` | Set a role to ping on new posts. Leave empty to clear. |
 | `/news config` | Show current configuration. |
-| `/news last-post` | Show the most recent news post. |
+| `/news last-post [visibility]` | Show the most recent news post. |
 
 ### `/heroes`
 
@@ -44,10 +44,12 @@ Available to everyone.
 
 | Command | Description |
 |---|---|
-| `/heroes stats <hero>` | Show base stats and performance for a hero. |
-| `/heroes matchup <hero>` | Show best/worst synergies and counters for a hero. |
-| `/heroes list [sort]` | List all heroes, sortable by name, win rate, or pick rate, with pagination. |
-| `/heroes random` | Show a random hero, with a re-roll button. |
+| `/heroes stats <hero> [visibility]` | Show base stats and performance for a hero. |
+| `/heroes matchup <hero> [visibility]` | Show best/worst synergies and counters for a hero. |
+| `/heroes list [sort] [visibility]` | List all heroes, sortable by name, win rate, or pick rate, with pagination. |
+| `/heroes random [visibility]` | Show a random hero, with a re-roll button. |
+
+Commands with a `[visibility]` option reply privately by default. Add `visibility:Public` to post the reply in the channel for everyone.
 
 See [docs/COMMANDS.md](docs/COMMANDS.md) for full details and examples.
 

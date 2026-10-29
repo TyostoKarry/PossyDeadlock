@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- `/heroes` commands and `/news last-post` now reply privately by default, so results no longer fill up the channel. Use the new `visibility` option and choose `Public` to post a reply in the channel for everyone.
 - Database upgrades now run atomically. A failed upgrade leaves the database at its previous version and logs which migration failed, instead of leaving it half-upgraded.
 - The database now uses SQLite's WAL mode. `database.sqlite-wal` and `database.sqlite-shm` files may appear next to the database while the bot is running; don't delete them while it runs.
 - `/heroes` commands and hero name autocomplete now read hero data from memory instead of querying the database on every call.

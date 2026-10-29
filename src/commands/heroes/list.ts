@@ -11,6 +11,7 @@ import type { Hero } from '../../types/heroes.js';
 import { getAllHeroes } from '../../db/database.js';
 import { formatRelativeTime } from '../../utils/formatUtils.js';
 import { logger } from '../../utils/logger.js';
+import { getVisibilityFlags } from '../../utils/visibility.js';
 
 const LIST_PREFIX = 'heroes:list';
 const NO_DATA_MESSAGE = 'No hero data available. Please try again later.';
@@ -139,6 +140,7 @@ export const handleList = async (interaction: ChatInputCommandInteraction): Prom
     );
     await interaction.reply({
         embeds: [buildListEmbed(sort, direction, page)],
+        flags: getVisibilityFlags(interaction),
         components: [
             buildSortRow(sort, direction),
             buildPaginationRow(sort, direction, page, totalPages),

@@ -23,7 +23,7 @@ export const buildNewsHelpEmbed = (): EmbedBuilder =>
                 value: 'Show the current news configuration for this server.',
             },
             {
-                name: '/news last-post',
+                name: '/news last-post [visibility]',
                 value: 'Show the most recent news post based on the current news mode.',
             },
         );
