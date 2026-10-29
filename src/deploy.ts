@@ -2,6 +2,7 @@ import { REST, Routes } from 'discord.js';
 import news from './commands/news/index.js';
 import heroes from './commands/heroes/index.js';
 import help from './commands/help/index.js';
+import steam from './commands/steam/index.js';
 
 const token = process.env.DISCORD_TOKEN;
 const clientId = process.env.CLIENT_ID;
@@ -13,7 +14,7 @@ if (!token || !clientId) {
 const rest = new REST().setToken(token);
 
 await rest.put(Routes.applicationCommands(clientId), {
-    body: [news.data.toJSON(), heroes.data.toJSON(), help.data.toJSON()],
+    body: [news.data.toJSON(), heroes.data.toJSON(), help.data.toJSON(), steam.data.toJSON()],
 });
 
 console.log('Commands registered!');
