@@ -3,6 +3,7 @@ import { getHeroById, getHeroByName, getHeroMatchups } from '../../db/database.j
 import type { Hero, HeroMatchup } from '../../types/heroes.js';
 import { formatRelativeTime } from '../../utils/formatUtils.js';
 import { logger } from '../../utils/logger.js';
+import { getVisibilityFlags } from '../../utils/visibility.js';
 
 const formatComplexity = (level: number): string => '●'.repeat(level) + '○'.repeat(4 - level);
 
@@ -84,5 +85,5 @@ export const handleStats = async (interaction: ChatInputCommandInteraction): Pro
     });
 
     logger.info(`[${interaction.guildId}] ${interaction.user.tag} viewed stats for ${hero.name}`);
-    await interaction.reply({ embeds: [embed] });
+    await interaction.reply({ embeds: [embed], flags: getVisibilityFlags(interaction) });
 };

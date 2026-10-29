@@ -11,6 +11,7 @@ import type { Hero } from '../../types/heroes.js';
 import { formatRelativeTime } from '../../utils/formatUtils.js';
 import { getRandomHero } from '../../db/database.js';
 import { logger } from '../../utils/logger.js';
+import { getVisibilityFlags } from '../../utils/visibility.js';
 
 const REROLL_PREFIX = 'heroes:reroll';
 const NO_DATA_MESSAGE = 'No hero data available. Please try again later.';
@@ -55,6 +56,7 @@ export const handleRandom = async (interaction: ChatInputCommandInteraction): Pr
     logger.info(`[${interaction.guildId}] ${interaction.user.tag} requested a random hero`);
     await interaction.reply({
         embeds: [buildRandomEmbed(hero)],
+        flags: getVisibilityFlags(interaction),
         components: [buildRerollButton(interaction.user.id)],
     });
 };

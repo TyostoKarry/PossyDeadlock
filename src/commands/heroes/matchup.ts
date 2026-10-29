@@ -7,6 +7,7 @@ import {
 } from '../../db/database.js';
 import { formatRelativeTime } from '../../utils/formatUtils.js';
 import { logger } from '../../utils/logger.js';
+import { getVisibilityFlags } from '../../utils/visibility.js';
 
 const formatEntry = (
     otherHeroId: number,
@@ -97,5 +98,5 @@ export const handleMatchup = async (interaction: ChatInputCommandInteraction): P
     logger.info(
         `[${interaction.guildId}] ${interaction.user.tag} viewed matchups for ${hero.name}`,
     );
-    await interaction.reply({ embeds: [embed] });
+    await interaction.reply({ embeds: [embed], flags: getVisibilityFlags(interaction) });
 };
