@@ -7,19 +7,19 @@ export const buildHeroesHelpEmbed = (): EmbedBuilder =>
         .setColor(0x00b4d8)
         .addFields(
             {
-                name: '/heroes stats <hero>',
+                name: '/heroes stats <hero> [visibility]',
                 value: 'Show base stats and performance for a specific hero.',
             },
             {
-                name: '/heroes matchup <hero>',
+                name: '/heroes matchup <hero> [visibility]',
                 value: 'Show best/worst synergies and counters for a specific hero.',
             },
             {
-                name: '/heroes list [sort]',
+                name: '/heroes list [sort] [visibility]',
                 value: 'List all heroes with their win rate and pick rate. Sortable, 15 per page.',
             },
             {
-                name: '/heroes random',
+                name: '/heroes random [visibility]',
                 value: 'Show a random hero with its win rate and pick rate, plus a re-roll button.',
             },
         )
