@@ -10,7 +10,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - `npm run backup` writes a consistent copy of the database to `data/`, safe to run while the bot is running. See the Backups section in DEPLOYMENT.md for how to restore one.
-- A short-lived cache for live deadlock-api lookups, groundwork for upcoming per-player commands. Repeated lookups will be served from memory instead of calling the API again. Adds the `lru-cache` dependency.
+- `/steam` commands for linking your Steam account to your Discord account: `link` (by account ID, SteamID64, or profile link), `unlink`, `show`, and `list-linked` to see which members of the server have linked. All replies are only visible to you.
+- A short-lived cache for live deadlock-api lookups. Repeated lookups will be served from memory instead of calling the API again. Adds the `lru-cache` dependency.
 
 ### Changed
 

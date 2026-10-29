@@ -240,3 +240,27 @@ export const getHeroSynergies = (heroId: number): readonly HeroSynergy[] =>
 
 export const getRandomHero = (): Hero | undefined =>
     heroCache.all[Math.floor(Math.random() * heroCache.all.length)];
+
+export const getSteamLink = (discordUserId: string): number | null => {
+    const row = db
+        .prepare('SELECT steam_account_id FROM steam_links WHERE discord_user_id = ?')
+        .get(discordUserId) as { steam_account_id: number } | undefined;
+    return row?.steam_account_id ?? null;
+};
+
+export const addSteamLink = (discordUserId: string, steamAccountId: number): void => {
+    db.prepare('INSERT INTO steam_links (discord_user_id, steam_account_id) VALUES (?, ?)').run(
+        discordUserId,
+        steamAccountId,
+    );
+};
+
+export const deleteSteamLink = (discordUserId: string): boolean =>
+    Number(
+        db.prepare('DELETE FROM steam_links WHERE discord_user_id = ?').run(discordUserId).changes,
+    ) > 0;
+
+export const getLinkedDiscordUserIds = (): string[] =>
+    (
+        db.prepare('SELECT discord_user_id FROM steam_links').all() as { discord_user_id: string }[]
+    ).map((row) => row.discord_user_id);

@@ -104,6 +104,7 @@ src/
       general.ts      — General topic embed (default)
       heroes.ts       — Heroes topic embed
       news.ts         — News topic embed
+      steam.ts        — Steam topic embed
     heroes/
       index.ts        — /heroes command registration, routing, autocomplete, and button handling
       list.ts         — list subcommand (sorting and pagination)
@@ -117,6 +118,12 @@ src/
       setPingRole.ts  — set-ping-role subcommand
       config.ts       — config subcommand
       lastPost.ts     — last-post subcommand
+    steam/
+      index.ts        — /steam command registration and routing
+      link.ts         — link subcommand
+      unlink.ts       — unlink subcommand
+      show.ts         — show subcommand
+      listLinked.ts   — list-linked subcommand
   db/
     database.ts                   — SQLite setup, queries, and the in-memory hero cache
     migrations/
@@ -124,6 +131,7 @@ src/
       002_hero_tables.ts          — hero, matchup, and synergy tables
       003_hero_type_complexity.ts — adds hero type and complexity columns
       004_seen_posts_per_guild.ts — tracks seen posts per server
+      005_steam_links.ts          — Discord user to Steam account links
       index.ts                    — ordered list of migrations
   jobs/
     heroPoller.ts     — cron job for polling deadlock-api.com (on startup, then daily at 06:00)
@@ -138,6 +146,7 @@ src/
     formatUtils.ts    — HTML/BBCode stripping and section splitting
     logger.ts         — timestamped logger
     steamApi.ts       — Steam News API client
+    steamId.ts        — Steam ID parsing and conversion
   index.ts            — bot entry point
   deploy.ts           — slash command registration script
 scripts/
