@@ -10,6 +10,7 @@ A Discord bot that automatically posts Deadlock news and patch notes to your ser
 - Role ping on new posts
 - Simple slash command configuration
 - Hero stats, matchups/synergies, and a sortable hero list, backed by a daily-refreshed database from deadlock-api.com
+- Link your Steam account to your Discord account
 
 ## Commands
 
@@ -23,6 +24,7 @@ Available to everyone. Replies are only visible to you.
 | `/help topic:Deadlock API` | Show info about deadlock-api.com and how it's used. |
 | `/help topic:Heroes` | Show a quick reference for `/heroes` commands. |
 | `/help topic:News` | Show a quick reference for `/news` commands. |
+| `/help topic:Steam` | Show a quick reference for `/steam` commands. |
 
 Includes a dropdown to switch between topics without re-running the command.
 
@@ -48,6 +50,17 @@ Available to everyone.
 | `/heroes matchup <hero> [visibility]` | Show best/worst synergies and counters for a hero. |
 | `/heroes list [sort] [visibility]` | List all heroes, sortable by name, win rate, or pick rate, with pagination. |
 | `/heroes random [visibility]` | Show a random hero, with a re-roll button. |
+
+### `/steam`
+
+Available to everyone. Replies are only visible to you.
+
+| Command | Description |
+|---|---|
+| `/steam link <steam>` | Link your Steam account by account ID, SteamID64, or profile link. |
+| `/steam unlink` | Remove your linked Steam account. |
+| `/steam show` | Show your linked Steam account. |
+| `/steam list-linked` | List members of this server who have linked a Steam account. |
 
 Commands with a `[visibility]` option reply privately by default. Add `visibility:Public` to post the reply in the channel for everyone.
 

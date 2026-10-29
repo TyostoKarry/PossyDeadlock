@@ -3,6 +3,7 @@
 - `/help` — available to everyone. Quick in-Discord reference with an interactive topic dropdown.
 - `/news` — require **Manage Server** permission
 - `/heroes` — available to everyone. Hero data comes from [deadlock-api.com](https://deadlock-api.com) and refreshes daily; win rate and pick rate figures are based on Phantom 1+ ranked matches.
+- `/steam` — available to everyone. Links your Steam account to your Discord account. Server-only; all replies are only visible to you.
 
 Commands with a `[visibility]` option reply privately by default, so only you can see the result. Add `visibility:Public` to post the reply in the channel for everyone. Messages like "hero not found" are always private.
 
@@ -12,7 +13,7 @@ Show help and command information. Only visible to you.
 
 | Option | Required | Description |
 |---|---|---|
-| `topic` | No | `General` (default), `Deadlock API`, `Heroes`, or `News`. Shows a quick reference for that topic. |
+| `topic` | No | `General` (default), `Deadlock API`, `Heroes`, `News`, or `Steam`. Shows a quick reference for that topic. |
 
 Includes a dropdown to switch between topics without re-running the command.
 
@@ -152,3 +153,48 @@ Includes a Re-roll button to get another random hero. Only the person who ran th
 
 **Examples:**
 - `/heroes random` — shows a random hero with a Re-roll button
+
+---
+
+## `/steam link <steam>`
+
+Link your Steam account to your Discord account. You can only link your own account, and only one at a time.
+
+| Option | Required | Description |
+|---|---|---|
+| `steam` | Yes | Your account ID (Steam32), SteamID64, or a `steamcommunity.com/profiles/…` link. |
+
+Custom profile URLs (`steamcommunity.com/id/…`) aren't supported. You can find your SteamID64 at [store.steampowered.com/account](https://store.steampowered.com/account). The ID is only checked for format, not looked up on Steam, so double-check the profile preview in the reply.
+
+If you're already linked, the command refuses and asks you to run `/steam unlink` first.
+
+Other members can see that you've linked an account with `/steam list-linked`. Your Steam ID isn't shown there.
+
+**Examples:**
+- `/steam link 52079950` — links by account ID
+- `/steam link 76561198012345678` — links by SteamID64
+- `/steam link https://steamcommunity.com/profiles/76561198012345678` — links by profile link
+
+---
+
+## `/steam unlink`
+
+Remove your linked Steam account. The link is deleted completely.
+
+No options.
+
+---
+
+## `/steam show`
+
+Show your linked Steam account: its account ID and SteamID64, with a link to the Steam profile.
+
+No options.
+
+---
+
+## `/steam list-linked`
+
+List the members of this server who have linked a Steam account, shown as mentions (nobody is pinged). Steam IDs aren't shown. Links are per Discord account, not per server, but only members of the current server are listed. Shows up to 100 members.
+
+No options.
