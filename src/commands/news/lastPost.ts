@@ -8,9 +8,10 @@ import {
     stripHtml,
 } from '../../utils/formatUtils.js';
 import { logger } from '../../utils/logger.js';
+import { getVisibilityFlags } from '../../utils/visibility.js';
 
 export const handleLastPost = async (interaction: ChatInputCommandInteraction): Promise<void> => {
-    await interaction.deferReply();
+    await interaction.deferReply({ flags: getVisibilityFlags(interaction) });
 
     try {
         const posts = await fetchDeadlockNews();
