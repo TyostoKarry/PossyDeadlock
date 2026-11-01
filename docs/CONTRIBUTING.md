@@ -10,7 +10,7 @@ How changes get from an idea into `main`. For setting up and running the bot loc
 
 **New issue** offers two templates:
 
-- **[Change](https://github.com/TyostoKarry/PossyDeadlock/issues/new?template=change.md)**: features, bug fixes, and maintenance (dependency updates, docs). Fill in the sections: **Overview**, **Background**, **Implementation**, **Notes**, and **Documentation** (which docs need updating, or "None").
+- **[Change](https://github.com/TyostoKarry/PossyDeadlock/issues/new?template=change.md)**: features, bug fixes, and maintenance (dependency updates, docs). Fill in the sections: **Overview**, **Background**, **Implementation**, **Tests** (what will be tested), **Notes**, and **Documentation** (which docs need updating, or "None").
 - **[Release](https://github.com/TyostoKarry/PossyDeadlock/issues/new?template=release.md)**: release prep only, see [RELEASING.md](RELEASING.md).
 
 Name the issue after what it does, starting with a verb (`Add …`, `Fix …`, `Update …`). The title becomes the branch name.
@@ -40,6 +40,8 @@ Small, focused commits, each doing one thing. Messages are short, imperative, an
 
 Code, docs, and the changelog entry are usually separate commits.
 
+New or changed code comes with tests in the same PR, either in the same commit or right after it. See the Testing section in [DEVELOPMENT.md](DEVELOPMENT.md).
+
 ### 4. Update the CHANGELOG
 
 Add an entry under `## [Unreleased]` in [CHANGELOG.md](CHANGELOG.md), in the right category (in order: **Added / Changed / Deprecated / Removed / Fixed / Security**). Write it for someone running the bot, not for a code reviewer.
@@ -59,10 +61,10 @@ If the change affects how the bot is used or run, update the matching docs in th
 ### 6. Check and open the PR
 
 ```bash
-npm run format:fix && npm run lint:fix && npm run build
+npm run format:fix && npm run lint:fix && npm run typecheck && npm run build && npm test
 ```
 
-This formats the code, fixes what ESLint can fix automatically, and compiles. All three must pass cleanly. CI runs the check-only versions (`npm run format`, `npm run lint`, `npm run build`) on every PR, so anything missed here fails the PR. Then open the PR against `main`:
+This formats the code, fixes what ESLint can fix automatically, type-checks the code and tests, compiles, and runs the tests. All five must pass cleanly. CI runs the same checks (`npm run format`, `npm run lint`, `npm run typecheck`, `npm run build`, `npm test`) on every PR, so anything missed here fails the PR. Then open the PR against `main`:
 
 - **Title:** the issue title
 - **Body:** a `## Summary` of what changed and why, ending with `close #<issue>` so merging closes the issue
@@ -72,7 +74,7 @@ Merge into `main` once it's done. Delete the branch afterwards.
 
 ## CI
 
-Every pull request to `main` runs the [CI workflow](../.github/workflows/ci.yml): `npm ci`, then `npm run format`, `npm run lint`, and `npm run build`. These are the same check-only scripts you can run locally.
+Every pull request to `main` runs the [CI workflow](../.github/workflows/ci.yml): `npm ci`, then `npm run format`, `npm run lint`, `npm run typecheck`, `npm run build`, and `npm test`. These are the same check-only scripts you can run locally.
 
 `main` is protected: changes only land through a pull request, the **Verify** check must pass, and the branch must be up to date with `main` before merging.
 
@@ -82,6 +84,8 @@ If CI fails, open the failing step in the PR's **Checks** tab, then:
 |---|---|
 | Check formatting | `npm run format:fix` |
 | Run linter | `npm run lint:fix`, then fix anything it reports that it can't fix itself |
+| Run type checker | `npm run typecheck` and fix the type errors it reports |
 | Build project | `npm run build` and fix the type errors it reports |
+| Run tests | `npm test`, then fix the code or the test it reports |
 
 Commit the fix and push; CI reruns automatically.

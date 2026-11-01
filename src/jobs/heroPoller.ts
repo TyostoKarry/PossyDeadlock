@@ -16,7 +16,7 @@ import {
 } from '../db/database.js';
 import { logger } from '../utils/logger.js';
 
-const poll = async (): Promise<void> => {
+export const poll = async (): Promise<void> => {
     logger.info('Hero poller: starting refresh...');
     try {
         const heroAssets = await fetchAllHeroes();

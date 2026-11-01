@@ -17,6 +17,10 @@ labels: []
 
 <!-- The planned change. For bugs, the fix (list options if there's more than one). -->
 
+## Tests
+
+<!-- What the tests will cover: normal cases, edge cases, and for bugs, a test that fails before the fix. -->
+
 ## Notes
 
 <!-- Dependencies on other issues, edge cases, follow-ups. -->

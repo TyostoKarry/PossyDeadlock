@@ -88,6 +88,9 @@ This uses `tsx` to run TypeScript directly without compiling, and reads from `.e
 | `npm run lint:fix` | Fix ESLint issues that can be fixed automatically |
 | `npm run format` | Check formatting with Prettier |
 | `npm run format:fix` | Format code with Prettier |
+| `npm run typecheck` | Type-check `src/`, `test/` and `scripts/` without compiling |
+| `npm test` | Run the tests |
+| `npm run test:coverage` | Run the tests and print a coverage report |
 | `npm run clear-seen` | Clear seen posts from production DB |
 | `npm run clear-seen:dev` | Clear seen posts from dev DB |
 | `npm run backup` | Back up the production DB to `data/backups/manual/` (safe while the bot is running) |
@@ -124,6 +127,7 @@ src/
       unlink.ts       — unlink subcommand
       show.ts         — show subcommand
       listLinked.ts   — list-linked subcommand
+    index.ts          — list of every command, used by index.ts and deploy.ts
   db/
     database.ts                   — SQLite setup, queries, and the in-memory hero cache
     migrations/
@@ -149,8 +153,14 @@ src/
     logger.ts         — timestamped logger
     steamApi.ts       — Steam News API client
     steamId.ts        — Steam ID parsing and conversion
+    version.ts        — bot version from package.json
+    visibility.ts     — the visibility option and reply flags
   index.ts            — bot entry point
+  interactions.ts     — routes interactions to commands, replies when a command fails
   deploy.ts           — slash command registration script
+test/                 — tests, mirroring src/ (see Testing)
+  helpers/            — fakes for fetch, console, Discord interactions and the news client
+  setup.ts            — points every test file at an in-memory database
 scripts/
   backup.mjs          — manual database backup script (VACUUM INTO)
 data/
@@ -169,7 +179,7 @@ Hero stats, matchups, and synergies are stored in the database and kept up to da
 
 The poller fetches data from [deadlock-api.com](https://deadlock-api.com) via `src/utils/deadlockApi.ts`, validates the responses against the zod schemas in `src/schemas/heroes.ts`, and writes them in a single transaction: `clearHeroData` empties the hero tables, then `upsertHero`, `upsertHeroMatchup`, and `upsertHeroSynergy` from `src/db/database.ts` write the fresh data. Commands therefore see either the old data or the new, never a half-finished refresh, and heroes or pairs the API no longer returns are removed. If any response is an empty list, the refresh is skipped and the existing data is kept. All hero stat endpoints are filtered to Phantom 1+ ranked matches (`min_average_badge=90`).
 
-Database tables for hero data are created by the migrations in `src/db/migrations/`, which run automatically on startup via a `PRAGMA user_version`-based migration runner in `src/db/database.ts`. Each migration runs in a transaction with its version bump, so a failed migration leaves the database at the previous version.
+Database tables for hero data are created by the migrations in `src/db/migrations/`, which run automatically on startup via `runMigrations`, a `PRAGMA user_version`-based migration runner in `src/db/database.ts`. Each migration runs in a transaction with its version bump, so a failed migration leaves the database at the previous version.
 
 All deadlock-api requests time out after 15 seconds, so a stalled request fails the refresh instead of hanging it.
 
@@ -213,13 +223,44 @@ Low-frequency per-server reads (news settings, seen posts) are not cached.
 
 ## Linting and Formatting
 
-Both cover `src/**/*.ts` and `scripts/**/*.mjs`. The plain scripts only check and never change files; the `:fix` variants write changes:
+Both cover `src/`, `test/` and `scripts/`. The plain scripts only check and never change files; the `:fix` variants write changes:
 
 ```bash
 npm run lint          # check
 npm run format        # check
 npm run lint:fix      # auto-fix
 npm run format:fix    # auto-format
+npm run typecheck     # type-check src/, test/ and scripts/
 ```
 
-CI runs `format`, `lint`, and `build` on every pull request to `main`, and the PR can't be merged until it passes.
+`npm run build` only compiles `src/`, and tsx doesn't check types when running tests, so `typecheck` is what catches type errors in tests and scripts.
+
+CI runs `format`, `lint`, `typecheck`, `build` and `test` on every pull request to `main`, and the PR can't be merged until it passes.
+
+## Testing
+
+```bash
+npm test                 # run every test
+npm run test:coverage    # the same, plus a coverage report
+```
+
+Tests use Node's built-in test runner (`node:test` with `node:assert/strict`) through tsx, so they need no extra dependencies. They live in `test/`, mirroring `src/`: the tests for `src/utils/steamId.ts` are in `test/utils/steamId.test.ts`. Every new or changed piece of code comes with tests in the same PR.
+
+Always run tests through the npm scripts. They load tsx, which resolves the `.js` imports to the `.ts` sources, and `test/setup.ts`, which keeps tests away from the real database.
+
+### What tests never touch
+
+- **The real database.** `test/setup.ts` sets `DB_PATH=:memory:` before each test file. Each test file runs in its own process, so it gets its own fresh, fully migrated in-memory database. Use different IDs in each test (servers, users), since the database is shared by the tests within a file.
+- **The network.** Replace `fetch` with `mockFetch(t, respond)` from `test/helpers/fetch.ts` in any test that would call an API. It records each request and resets when the test ends.
+- **Discord.** Commands are called with fake interactions from `test/helpers/interactions.ts` (`chatInput`, `autocomplete`, `button`, `selectMenu`), which record every `reply`, `deferReply`, `editReply`, `followUp`, `update` and `respond`. `onlyResponse`, `payloadOf`, `embedOf` and `componentsOf` read what was sent. The news poller uses the fake client in `test/helpers/newsClient.ts`.
+- **`data/`.** Tests that need real files, such as backups, create a temporary folder with `mkdtempSync(join(tmpdir(), 'possydeadlock-'))` and delete it in `t.after`.
+
+### Other helpers
+
+- `captureConsole(t)` from `test/helpers/console.ts` silences console output for one test and returns what was logged, for checking log and error messages.
+- `heroRow(id, name, overrides)` from `test/helpers/heroes.ts` builds a hero for `upsertHero`. Call `refreshHeroCache()` after changing hero data, as the hero poller does.
+- Time-dependent code uses `t.mock.timers.enable({ apis: ['Date'], now })`, and `cron.schedule` can be replaced with `t.mock.method(cron, 'schedule', …)` to check a job's schedule without running it.
+
+### Coverage
+
+`npm run test:coverage` prints line, branch and function coverage per file. There are no coverage thresholds, and CI doesn't run it; use it to find code nothing tests.

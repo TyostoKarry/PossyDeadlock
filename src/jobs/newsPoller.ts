@@ -17,7 +17,7 @@ import {
     stripHtml,
 } from '../utils/formatUtils.js';
 
-const poll = async (client: Client<true>): Promise<void> => {
+export const poll = async (client: Client<true>): Promise<void> => {
     try {
         const posts = await fetchDeadlockNews();
 

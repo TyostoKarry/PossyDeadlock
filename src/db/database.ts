@@ -8,7 +8,9 @@ import type { Hero, HeroMatchup, HeroSynergy } from '../types/heroes.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const isDev = process.env.ENVIRONMENT === 'development';
-const dbPath = join(__dirname, `../../data/database${isDev ? '.dev' : ''}.sqlite`);
+// DB_PATH is only meant for tests, which set it to ':memory:'.
+const dbPath =
+    process.env.DB_PATH ?? join(__dirname, `../../data/database${isDev ? '.dev' : ''}.sqlite`);
 export const backupFilePrefix = `database${isDev ? '.dev' : ''}-`;
 
 mkdirSync(join(__dirname, '../../data'), { recursive: true });
@@ -17,28 +19,35 @@ const db = new DatabaseSync(dbPath);
 db.exec('PRAGMA journal_mode = WAL');
 db.exec('PRAGMA busy_timeout = 5000');
 
-const currentVersion = (db.prepare('PRAGMA user_version').get() as { user_version: number })
-    .user_version;
+export const runMigrations = (target: DatabaseSync, allMigrations: readonly string[]): void => {
+    const currentVersion = (target.prepare('PRAGMA user_version').get() as { user_version: number })
+        .user_version;
 
-for (const [i, migration] of migrations.slice(currentVersion).entries()) {
-    const version = currentVersion + i + 1;
-    db.exec('BEGIN');
-    try {
-        db.exec(migration);
-        db.exec(`PRAGMA user_version = ${version}`);
-        db.exec('COMMIT');
-        logger.info(`DB: applied migration ${version}`);
-    } catch (error) {
-        db.exec('ROLLBACK');
-        logger.error(
-            `DB: migration ${version} failed, rolled back to version ${version - 1}`,
-            error,
-        );
-        throw error;
+    for (const [i, migration] of allMigrations.slice(currentVersion).entries()) {
+        const version = currentVersion + i + 1;
+        target.exec('BEGIN');
+        try {
+            target.exec(migration);
+            target.exec(`PRAGMA user_version = ${version}`);
+            target.exec('COMMIT');
+            logger.info(`DB: applied migration ${version}`);
+        } catch (error) {
+            target.exec('ROLLBACK');
+            logger.error(
+                `DB: migration ${version} failed, rolled back to version ${version - 1}`,
+                error,
+            );
+            throw error;
+        }
     }
-}
+};
 
-db.exec(`DELETE FROM seen_posts WHERE seen_at < datetime('now', '-30 days')`);
+export const pruneSeenPosts = (): void => {
+    db.exec(`DELETE FROM seen_posts WHERE seen_at < datetime('now', '-30 days')`);
+};
+
+runMigrations(db, migrations);
+pruneSeenPosts();
 
 export const runInTransaction = <T>(fn: () => T): T => {
     db.exec('BEGIN');

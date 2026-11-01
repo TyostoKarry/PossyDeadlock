@@ -7,9 +7,9 @@ import { parseBackupDate, selectBackupsToKeep } from '../utils/backupRetention.j
 import { logger } from '../utils/logger.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const backupDir = join(__dirname, '../../data/backups/automatic');
+const defaultBackupDir = join(__dirname, '../../data/backups/automatic');
 
-const runBackup = (): void => {
+export const runBackup = (backupDir = defaultBackupDir): void => {
     try {
         const backupPath = backupDatabase(backupDir);
 
