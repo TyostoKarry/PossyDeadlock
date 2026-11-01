@@ -9,6 +9,7 @@ import type { Hero, HeroMatchup, HeroSynergy } from '../types/heroes.js';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const isDev = process.env.ENVIRONMENT === 'development';
 const dbPath = join(__dirname, `../../data/database${isDev ? '.dev' : ''}.sqlite`);
+export const backupFilePrefix = `database${isDev ? '.dev' : ''}-`;
 
 mkdirSync(join(__dirname, '../../data'), { recursive: true });
 
@@ -105,10 +106,29 @@ export const markPostSeen = (guildId: string, postId: string): void => {
     );
 };
 
+// Tables refilled from the API every day, child tables first.
+const REGENERATED_TABLES = ['hero_matchups', 'hero_synergies', 'heroes'] as const;
+
 export const clearHeroData = (): void => {
-    db.exec('DELETE FROM hero_matchups');
-    db.exec('DELETE FROM hero_synergies');
-    db.exec('DELETE FROM heroes');
+    for (const table of REGENERATED_TABLES) db.exec(`DELETE FROM ${table}`);
+};
+
+// Writes a consistent copy with VACUUM INTO, then empties the regenerated tables in the copy
+// so it only holds data that can't be rebuilt. Returns the path of the new backup.
+export const backupDatabase = (backupDir: string): string => {
+    mkdirSync(backupDir, { recursive: true });
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+    const backupPath = join(backupDir, `${backupFilePrefix}${timestamp}.sqlite`);
+    db.prepare('VACUUM INTO ?').run(backupPath);
+
+    const backup = new DatabaseSync(backupPath);
+    try {
+        for (const table of REGENERATED_TABLES) backup.exec(`DELETE FROM ${table}`);
+        backup.exec('VACUUM');
+    } finally {
+        backup.close();
+    }
+    return backupPath;
 };
 
 const upsertHeroStatement = db.prepare(

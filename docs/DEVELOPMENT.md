@@ -90,8 +90,8 @@ This uses `tsx` to run TypeScript directly without compiling, and reads from `.e
 | `npm run format:fix` | Format code with Prettier |
 | `npm run clear-seen` | Clear seen posts from production DB |
 | `npm run clear-seen:dev` | Clear seen posts from dev DB |
-| `npm run backup` | Back up the production DB to `data/` (safe while the bot is running) |
-| `npm run backup:dev` | Back up the dev DB to `data/` |
+| `npm run backup` | Back up the production DB to `data/backups/manual/` (safe while the bot is running) |
+| `npm run backup:dev` | Back up the dev DB to `data/backups/manual/` |
 
 ## Project Structure
 
@@ -134,6 +134,7 @@ src/
       005_steam_links.ts          — Discord user to Steam account links
       index.ts                    — ordered list of migrations
   jobs/
+    backupJob.ts      — cron job for automatic database backups (daily at 05:00)
     heroPoller.ts     — cron job for polling deadlock-api.com (on startup, then daily at 06:00)
     newsPoller.ts     — cron job for polling Steam news (every 5 minutes)
   schemas/
@@ -142,6 +143,7 @@ src/
     heroes.ts         — Hero, HeroMatchup, and HeroSynergy types
   utils/
     apiCache.ts       — short-lived cache for on-demand API calls
+    backupRetention.ts — picks which automatic backups to keep
     deadlockApi.ts    — deadlock-api.com client
     formatUtils.ts    — HTML/BBCode stripping and section splitting
     logger.ts         — timestamped logger
@@ -150,10 +152,13 @@ src/
   index.ts            — bot entry point
   deploy.ts           — slash command registration script
 scripts/
-  backup.mjs          — database backup script (VACUUM INTO)
+  backup.mjs          — manual database backup script (VACUUM INTO)
 data/
   database.sqlite     — production SQLite database (gitignored)
   database.dev.sqlite — development SQLite database (gitignored)
+  backups/
+    automatic/        — daily backups, pruned automatically (gitignored)
+    manual/           — npm run backup copies, never pruned (gitignored)
 ```
 
 The database runs in WAL mode, so `-wal` and `-shm` files may appear next to it while the bot is running. Don't delete them while the bot is running: they can hold recent writes.
@@ -167,6 +172,14 @@ The poller fetches data from [deadlock-api.com](https://deadlock-api.com) via `s
 Database tables for hero data are created by the migrations in `src/db/migrations/`, which run automatically on startup via a `PRAGMA user_version`-based migration runner in `src/db/database.ts`. Each migration runs in a transaction with its version bump, so a failed migration leaves the database at the previous version.
 
 All deadlock-api requests time out after 15 seconds, so a stalled request fails the refresh instead of hanging it.
+
+## Backups
+
+`src/jobs/backupJob.ts` runs daily at 05:00 (server time), an hour before the hero refresh. It calls `backupDatabase` in `src/db/database.ts`, which writes a copy with `VACUUM INTO` to `data/backups/automatic/`, then empties the `REGENERATED_TABLES` in the copy and compacts it. The same list is used by `clearHeroData`, so a new daily-refreshed table only needs to be added there to be left out of backups too. Backups keep the schema and `user_version`, so a restore is a file copy.
+
+After each backup the job deletes old automatic backups that `selectBackupsToKeep` in `src/utils/backupRetention.ts` doesn't select (3 daily, 2 weekly, 2 monthly; see DEPLOYMENT.md). Backup files are named `database-<timestamp>.sqlite`, or `database.dev-<timestamp>.sqlite` in development. The job only considers files with the current environment's prefix, and never deletes files that don't match the pattern. A failed backup is logged and never crashes the bot.
+
+`npm run backup` (`scripts/backup.mjs`) writes full copies to `data/backups/manual/`, which the job never touches.
 
 ## Caching
 
@@ -200,7 +213,7 @@ Low-frequency per-server reads (news settings, seen posts) are not cached.
 
 ## Linting and Formatting
 
-The plain scripts only check and never change files; the `:fix` variants write changes:
+Both cover `src/**/*.ts` and `scripts/**/*.mjs`. The plain scripts only check and never change files; the `:fix` variants write changes:
 
 ```bash
 npm run lint          # check
