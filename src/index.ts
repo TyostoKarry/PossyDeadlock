@@ -109,6 +109,8 @@ client.once(Events.ClientReady, async (readyClient) => {
     startNewsPoller(readyClient);
     const { startHeroPoller } = await import('./jobs/heroPoller.js');
     startHeroPoller();
+    const { startBackupJob } = await import('./jobs/backupJob.js');
+    startBackupJob();
 });
 
 const shutdown = (signal: string): void => {
