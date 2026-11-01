@@ -101,24 +101,42 @@ If the update added or changed slash commands, run `npm run deploy` before resta
 
 ## Backups
 
+Backups are written with SQLite's `VACUUM INTO`, which makes a consistent copy and is safe while the bot is running. Don't back up by copying `database.sqlite` while the bot is running: the database runs in WAL mode, so recent writes may still be in `database.sqlite-wal`, and a copy taken mid-write can be inconsistent.
+
+### Automatic backups
+
+The bot backs up the database every day at 05:00 (server time) to `data/backups/automatic/database-<timestamp>.sqlite`. After each backup, older automatic backups are deleted except:
+
+- **3 daily:** the 3 newest backups
+- **2 weekly:** the first backup of each of the 2 most recent weeks (weeks start on Monday, UTC)
+- **2 monthly:** the first backup of each of the 2 most recent months (UTC)
+
+One backup can count toward several of these, so there are usually fewer than 7 files. If the bot was down on a Monday or the 1st, the first backup after that takes the weekly or monthly slot.
+
+Automatic backups leave out the tables that are rebuilt daily from deadlock-api.com. The tables themselves are kept, only their rows are dropped. After restoring one, commands that use those tables have no data until they're refilled on startup.
+
+### Manual backups
+
 ```bash
 npm run backup
 ```
 
-This writes a consistent copy of the database to `data/database-backup-<timestamp>.sqlite` using SQLite's `VACUUM INTO`. It's safe to run while the bot is running. Don't back up by copying `database.sqlite` while the bot is running: the database runs in WAL mode, so recent writes may still be in `database.sqlite-wal`, and a copy taken mid-write can be inconsistent.
+This writes a full copy of the database, including the daily-rebuilt tables, to `data/backups/manual/database-<timestamp>.sqlite`. Take one before anything risky, such as an update with a migration or manual edits. Manual backups are never deleted automatically; remove them by hand when you no longer need them.
 
 The first start after upgrading to WAL mode switches the database over, so don't run `backup` or `clear-seen` at the same moment.
 
-To restore a backup:
+### Restoring a backup
 
 ```bash
 pm2 stop possydeadlock
-cp data/database-backup-<timestamp>.sqlite data/database.sqlite
+cp data/backups/<automatic|manual>/database-<timestamp>.sqlite data/database.sqlite
 rm -f data/database.sqlite-wal data/database.sqlite-shm
 pm2 start possydeadlock
 ```
 
 Remove the leftover `-wal` and `-shm` files before starting. Otherwise SQLite applies the old log to the restored file, which can corrupt it.
+
+All backups are stored on the same disk as the database. They protect against corruption and bad migrations, not against losing the server, so copy important backups somewhere else.
 
 ## Hero Data
 

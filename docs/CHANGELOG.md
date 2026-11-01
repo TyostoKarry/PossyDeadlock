@@ -9,7 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- `npm run backup` writes a consistent copy of the database to `data/`, safe to run while the bot is running. See the Backups section in DEPLOYMENT.md for how to restore one.
+- Automatic daily database backups at 05:00 to `data/backups/automatic/`, with tiered retention: the 3 newest, plus the first backup of each of the last 2 weeks and 2 months. Older automatic backups are deleted. They leave out the tables rebuilt daily from deadlock-api.com, which are refilled on startup.
+- `npm run backup` writes a full, consistent copy of the database to `data/backups/manual/`, safe to run while the bot is running. Manual backups are never deleted automatically. See the Backups section in DEPLOYMENT.md for how to restore one.
 - `/steam` commands for linking your Steam account to your Discord account: `link` (by account ID, SteamID64, or profile link), `unlink`, `show`, and `list-linked` to see which members of the server have linked. All replies are only visible to you.
 - A short-lived cache for live deadlock-api lookups. Repeated lookups will be served from memory instead of calling the API again. Adds the `lru-cache` dependency.
 
