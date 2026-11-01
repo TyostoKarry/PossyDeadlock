@@ -76,7 +76,16 @@ export const handleInteraction = async (
         await command.execute(interaction);
     } catch (error) {
         logger.error('Error executing command', error);
-        await interaction.reply(ERROR_REPLY);
+        // A second reply is rejected once the command has replied or deferred, and an error
+        // thrown from here would crash the bot, so the error reply must never throw.
+        try {
+            if (interaction.replied || interaction.deferred) {
+                await interaction.followUp(ERROR_REPLY);
+            } else {
+                await interaction.reply(ERROR_REPLY);
+            }
+        } catch (replyError) {
+            logger.error('Failed to send the error reply', replyError);
+        }
     }
 };
-
