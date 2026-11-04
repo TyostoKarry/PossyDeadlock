@@ -29,6 +29,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The bot no longer crashes when a command fails after it has already replied. The error message is now sent as a follow-up instead.
 
 - News posts now reach every server with a news channel set. Previously each post went only to the first server that accepted it, so other servers missed it (for example, an official post went to one server and never reached the others). Existing seen posts carry over on upgrade, so nothing is posted again.
+- One server's deleted or hidden news channel no longer stops news for other servers. Previously every server checked after it got no news, on every poll, until that server changed its news channel. The missing channel is now logged as a warning.
 - `zod` is now a production dependency — it was listed as a dev dependency despite being used at runtime, so deploying with `npm ci --omit=dev` would crash the bot on startup
 
 ### Security
