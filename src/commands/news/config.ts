@@ -1,6 +1,19 @@
-import { ChatInputCommandInteraction, EmbedBuilder, MessageFlags } from 'discord.js';
+import { ChatInputCommandInteraction, EmbedBuilder, MessageFlags, TextChannel } from 'discord.js';
 import { getNewsChannel, getNewsMode, getPingRole } from '../../db/database.js';
 import { logger } from '../../utils/logger.js';
+import { missingNewsPermissions } from '../../utils/newsPermissions.js';
+
+const describePermissions = (
+    interaction: ChatInputCommandInteraction,
+    channelId: string,
+): string => {
+    const channel = interaction.guild?.channels.cache.get(channelId);
+    if (!(channel instanceof TextChannel)) {
+        return 'Channel not found — use `/news set-channel` to pick another';
+    }
+    const missingPermissions = missingNewsPermissions(channel);
+    return missingPermissions.length > 0 ? `Missing: ${missingPermissions.join(', ')}` : 'All set';
+};
 
 export const handleConfig = async (interaction: ChatInputCommandInteraction): Promise<void> => {
     const guildId = interaction.guildId!;
@@ -17,6 +30,15 @@ export const handleConfig = async (interaction: ChatInputCommandInteraction): Pr
                 value: channelId ? `<#${channelId}>` : 'Not set — use `/news set-channel`',
                 inline: false,
             },
+            ...(channelId
+                ? [
+                      {
+                          name: 'Permissions',
+                          value: describePermissions(interaction, channelId),
+                          inline: false,
+                      },
+                  ]
+                : []),
             {
                 name: 'News Mode',
                 value:
