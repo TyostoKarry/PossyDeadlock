@@ -1,7 +1,13 @@
 import { describe, it } from 'node:test';
 import type { TestContext } from 'node:test';
 import assert from 'node:assert/strict';
-import { MessageFlags, PermissionFlagsBits, Role, TextChannel } from 'discord.js';
+import {
+    MessageFlags,
+    PermissionFlagsBits,
+    PermissionsBitField,
+    Role,
+    TextChannel,
+} from 'discord.js';
 import news from '../../src/commands/news/index.js';
 import {
     getNewsChannel,
@@ -18,9 +24,15 @@ import { captureConsole } from '../helpers/console.js';
 import { mockFetch } from '../helpers/fetch.js';
 import { chatInput, embedOf, onlyResponse, payloadOf } from '../helpers/interactions.js';
 import type { CommandResponse } from '../helpers/interactions.js';
+import { allNewsPermissions } from '../helpers/newsClient.js';
 
-const textChannel = (id: string): TextChannel =>
-    Object.assign(Object.create(TextChannel.prototype) as TextChannel, { id, name: 'news' });
+const textChannel = (id: string, permissions = allNewsPermissions): TextChannel =>
+    Object.assign(Object.create(TextChannel.prototype) as TextChannel, {
+        id,
+        name: 'news',
+        guild: { members: { me: { id: 'bot' } } },
+        permissionsFor: () => new PermissionsBitField(permissions),
+    });
 
 const role = (id: string): Role =>
     Object.assign(Object.create(Role.prototype) as Role, { id, name: 'Patch Notes' });
@@ -118,6 +130,20 @@ describe('/news set-channel', () => {
         const guild = newGuild();
         const content = privateReply(await run(guild, 'set-channel', { channel: { id: 'voice' } }));
         assert.equal(content, 'Please select a text channel.');
+        assert.equal(getNewsChannel(guild), null);
+    });
+
+    it('refuses a channel where the bot is missing permissions, naming them', async () => {
+        const guild = newGuild();
+        const channel = textChannel(
+            'c1',
+            PermissionFlagsBits.ViewChannel | PermissionFlagsBits.SendMessages,
+        );
+        const content = privateReply(await run(guild, 'set-channel', { channel }));
+        assert.equal(
+            content,
+            "The bot can't post news in <#c1>. It's missing these permissions there: Embed Links, Create Public Threads, Send Messages in Threads.",
+        );
         assert.equal(getNewsChannel(guild), null);
     });
 

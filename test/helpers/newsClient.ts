@@ -28,7 +28,7 @@ interface FakeChannelOptions {
     permissions?: bigint;
 }
 
-const allNewsPermissions = NEWS_PERMISSIONS.reduce((all, [, flag]) => all | flag, 0n);
+export const allNewsPermissions = NEWS_PERMISSIONS.reduce((all, [, flag]) => all | flag, 0n);
 
 // A client with the given servers and channels, recording every message the news poller sends.
 export const createNewsClient = (
