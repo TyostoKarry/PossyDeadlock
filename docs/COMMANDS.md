@@ -31,6 +31,8 @@ Set the channel where Deadlock news will be posted.
 |---|---|---|
 | `channel` | No | The text channel to post news in. Leave empty to disable. |
 
+The bot needs these permissions in the channel: **View Channel**, **Send Messages**, **Embed Links**, **Create Public Threads** and **Send Messages in Threads** (the last two for patch notes threads). A channel where any of them is missing is refused, and the reply lists what's missing. If permissions are removed later, the bot skips that server until they're fixed. No posts are lost: they go out once the bot can post again.
+
 **Examples:**
 - `/news set-channel #deadlock-news` — posts news to #deadlock-news
 - `/news set-channel` — disables news posting, preserves other settings
@@ -72,6 +74,8 @@ Set a role to ping when new Deadlock news is posted.
 Show the current news configuration for this server.
 
 Displays the configured news channel, news mode, and ping role. Only visible to you.
+
+When a channel is set, a **Permissions** line shows whether the bot can post there: `All set`, the permissions it's missing, or that the channel no longer exists.
 
 ---
 
