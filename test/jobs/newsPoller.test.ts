@@ -237,6 +237,23 @@ describe('news poller', () => {
         assert.equal(isPostSeen(voice, officialPost.gid), false);
     });
 
+    it('keeps posting to other servers when one server fails', async (t) => {
+        captureConsole(t);
+        const [broken, working] = [newGuild(), newGuild()];
+        setNewsChannel(broken, 'deleted-channel');
+        setNewsChannel(working, 'channel-1');
+        const { client, sent } = createNewsClient([broken, working], { 'channel-1': {} });
+        mockNews(t, [officialPost]);
+
+        await poll(client);
+        assert.deepEqual(
+            sent.map(({ channelId }) => channelId),
+            ['channel-1'],
+        );
+        assert.equal(isPostSeen(broken, officialPost.gid), false);
+        assert.equal(isPostSeen(working, officialPost.gid), true);
+    });
+
     it('marks a post seen even when sending fails, and carries on', async (t) => {
         const output = captureConsole(t);
         const [failing, working] = [newGuild(), newGuild()];
