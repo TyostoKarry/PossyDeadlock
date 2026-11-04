@@ -17,6 +17,22 @@ import {
     stripHtml,
 } from '../utils/formatUtils.js';
 
+const fetchNewsChannel = async (
+    client: Client<true>,
+    guildId: string,
+    channelID: string,
+): Promise<TextChannel | null> => {
+    try {
+        const channel =
+            client.channels.cache.get(channelID) ?? (await client.channels.fetch(channelID));
+        return channel instanceof TextChannel ? channel : null;
+    } catch (error) {
+        const reason = error instanceof Error ? error.message : String(error);
+        logger.warn(`[${guildId}] Could not fetch news channel ${channelID}: ${reason}`);
+        return null;
+    }
+};
+
 const postNewsToGuild = async (
     client: Client<true>,
     guildId: string,
@@ -25,9 +41,8 @@ const postNewsToGuild = async (
     const channelID = getNewsChannel(guildId);
     if (!channelID) return;
 
-    const channel =
-        client.channels.cache.get(channelID) ?? (await client.channels.fetch(channelID));
-    if (!(channel instanceof TextChannel)) return;
+    const channel = await fetchNewsChannel(client, guildId, channelID);
+    if (!channel) return;
 
     const mode = getNewsMode(guildId);
     const roleId = getPingRole(guildId);

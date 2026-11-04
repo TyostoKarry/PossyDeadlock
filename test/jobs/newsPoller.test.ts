@@ -254,6 +254,21 @@ describe('news poller', () => {
         assert.equal(isPostSeen(working, officialPost.gid), true);
     });
 
+    it('warns about a news channel that can not be fetched', async (t) => {
+        const output = captureConsole(t);
+        const guild = newGuild();
+        setNewsChannel(guild, 'deleted-channel');
+        const { client } = createNewsClient([guild]);
+        mockNews(t, [officialPost]);
+
+        await poll(client);
+        assert.match(
+            output.warn[0] ?? '',
+            /Could not fetch news channel deleted-channel: Unknown Channel/,
+        );
+        assert.deepEqual(output.error, []);
+    });
+
     it('marks a post seen even when sending fails, and carries on', async (t) => {
         const output = captureConsole(t);
         const [failing, working] = [newGuild(), newGuild()];
