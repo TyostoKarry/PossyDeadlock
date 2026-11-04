@@ -1,7 +1,13 @@
 import { describe, it } from 'node:test';
 import type { TestContext } from 'node:test';
 import assert from 'node:assert/strict';
-import { MessageFlags, PermissionFlagsBits, Role, TextChannel } from 'discord.js';
+import {
+    MessageFlags,
+    PermissionFlagsBits,
+    PermissionsBitField,
+    Role,
+    TextChannel,
+} from 'discord.js';
 import news from '../../src/commands/news/index.js';
 import {
     getNewsChannel,
@@ -18,9 +24,19 @@ import { captureConsole } from '../helpers/console.js';
 import { mockFetch } from '../helpers/fetch.js';
 import { chatInput, embedOf, onlyResponse, payloadOf } from '../helpers/interactions.js';
 import type { CommandResponse } from '../helpers/interactions.js';
+import { allNewsPermissions } from '../helpers/newsClient.js';
 
-const textChannel = (id: string): TextChannel =>
-    Object.assign(Object.create(TextChannel.prototype) as TextChannel, { id, name: 'news' });
+const textChannel = (id: string, permissions = allNewsPermissions): TextChannel =>
+    Object.assign(Object.create(TextChannel.prototype) as TextChannel, {
+        id,
+        name: 'news',
+        guild: { members: { me: { id: 'bot' } } },
+        permissionsFor: () => new PermissionsBitField(permissions),
+    });
+
+const guildWith = (channel: TextChannel): unknown => ({
+    channels: { cache: new Map([[channel.id, channel]]) },
+});
 
 const role = (id: string): Role =>
     Object.assign(Object.create(Role.prototype) as Role, { id, name: 'Patch Notes' });
@@ -50,7 +66,12 @@ const newGuild = (): string => `news-guild-${++nextGuild}`;
 const run = async (
     guildId: string,
     subcommand: string,
-    options: { strings?: Record<string, string>; channel?: unknown; role?: unknown } = {},
+    options: {
+        strings?: Record<string, string>;
+        channel?: unknown;
+        role?: unknown;
+        guild?: unknown;
+    } = {},
 ): Promise<CommandResponse[]> => {
     const { interaction, responses } = chatInput({
         commandName: 'news',
@@ -118,6 +139,20 @@ describe('/news set-channel', () => {
         const guild = newGuild();
         const content = privateReply(await run(guild, 'set-channel', { channel: { id: 'voice' } }));
         assert.equal(content, 'Please select a text channel.');
+        assert.equal(getNewsChannel(guild), null);
+    });
+
+    it('refuses a channel where the bot is missing permissions, naming them', async () => {
+        const guild = newGuild();
+        const channel = textChannel(
+            'c1',
+            PermissionFlagsBits.ViewChannel | PermissionFlagsBits.SendMessages,
+        );
+        const content = privateReply(await run(guild, 'set-channel', { channel }));
+        assert.equal(
+            content,
+            "The bot can't post news in <#c1>. It's missing these permissions there: Embed Links, Create Public Threads, Send Messages in Threads.",
+        );
         assert.equal(getNewsChannel(guild), null);
     });
 
@@ -219,9 +254,37 @@ describe('/news config', () => {
         setNewsChannel(guild, 'c1');
         setNewsMode(guild, 'all');
         setPingRole(guild, 'r1');
+        const response = onlyResponse(
+            await run(guild, 'config', { guild: guildWith(textChannel('c1')) }),
+        );
         assert.deepEqual(
-            embedOf(onlyResponse(await run(guild, 'config'))).fields?.map(({ value }) => value),
-            ['<#c1>', 'All (includes third party articles)', '<@&r1>'],
+            embedOf(response).fields?.map(({ value }) => value),
+            ['<#c1>', 'All set', 'All (includes third party articles)', '<@&r1>'],
+        );
+    });
+
+    it('lists the permissions the bot is missing in the news channel', async (t) => {
+        captureConsole(t);
+        const guild = newGuild();
+        setNewsChannel(guild, 'c1');
+        const channel = textChannel('c1', PermissionFlagsBits.ViewChannel);
+        const response = onlyResponse(await run(guild, 'config', { guild: guildWith(channel) }));
+        assert.equal(
+            embedOf(response).fields?.[1]?.value,
+            'Missing: Send Messages, Embed Links, Create Public Threads, Send Messages in Threads',
+        );
+    });
+
+    it('says when the news channel no longer exists', async (t) => {
+        captureConsole(t);
+        const guild = newGuild();
+        setNewsChannel(guild, 'deleted');
+        const response = onlyResponse(
+            await run(guild, 'config', { guild: guildWith(textChannel('c1')) }),
+        );
+        assert.equal(
+            embedOf(response).fields?.[1]?.value,
+            'Channel not found — use `/news set-channel` to pick another',
         );
     });
 });

@@ -7,6 +7,7 @@ import {
 } from '../../db/database.js';
 import { logger } from '../../utils/logger.js';
 import { fetchDeadlockNews } from '../../utils/steamApi.js';
+import { missingNewsPermissions } from '../../utils/newsPermissions.js';
 
 export const handleSetChannel = async (interaction: ChatInputCommandInteraction): Promise<void> => {
     const channel = interaction.options.getChannel('channel');
@@ -24,6 +25,15 @@ export const handleSetChannel = async (interaction: ChatInputCommandInteraction)
     if (!(channel instanceof TextChannel)) {
         await interaction.reply({
             content: 'Please select a text channel.',
+            flags: MessageFlags.Ephemeral,
+        });
+        return;
+    }
+
+    const missingPermissions = missingNewsPermissions(channel);
+    if (missingPermissions.length > 0) {
+        await interaction.reply({
+            content: `The bot can't post news in <#${channel.id}>. It's missing these permissions there: ${missingPermissions.join(', ')}.`,
             flags: MessageFlags.Ephemeral,
         });
         return;
