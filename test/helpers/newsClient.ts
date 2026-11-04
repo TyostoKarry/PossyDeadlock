@@ -66,7 +66,12 @@ export const createNewsClient = (
         guilds: { cache: new Map(guildIds.map((id) => [id, { id }])) },
         channels: {
             cache: cached,
-            fetch: async (id: string) => all.get(id) ?? null,
+            // Like discord.js, which throws for a channel that was deleted.
+            fetch: async (id: string) => {
+                const channel = all.get(id);
+                if (!channel) throw new Error('Unknown Channel');
+                return channel;
+            },
         },
     } as unknown as Client<true>;
 

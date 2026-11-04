@@ -1,6 +1,6 @@
 import cron from 'node-cron';
 import { Client, EmbedBuilder, TextChannel } from 'discord.js';
-import { fetchDeadlockNews, OFFICIAL_FEED } from '../utils/steamApi.js';
+import { fetchDeadlockNews, OFFICIAL_FEED, type SteamNewsPost } from '../utils/steamApi.js';
 import {
     getNewsChannel,
     getNewsMode,
@@ -17,73 +17,97 @@ import {
     stripHtml,
 } from '../utils/formatUtils.js';
 
+const fetchNewsChannel = async (
+    client: Client<true>,
+    guildId: string,
+    channelID: string,
+): Promise<TextChannel | null> => {
+    try {
+        const channel =
+            client.channels.cache.get(channelID) ?? (await client.channels.fetch(channelID));
+        return channel instanceof TextChannel ? channel : null;
+    } catch (error) {
+        const reason = error instanceof Error ? error.message : String(error);
+        logger.warn(`[${guildId}] Could not fetch news channel ${channelID}: ${reason}`);
+        return null;
+    }
+};
+
+const postNewsToGuild = async (
+    client: Client<true>,
+    guildId: string,
+    posts: SteamNewsPost[],
+): Promise<void> => {
+    const channelID = getNewsChannel(guildId);
+    if (!channelID) return;
+
+    const channel = await fetchNewsChannel(client, guildId, channelID);
+    if (!channel) return;
+
+    const mode = getNewsMode(guildId);
+    const roleId = getPingRole(guildId);
+    const filteredPosts =
+        mode === 'official' ? posts.filter((p) => p.feedname === OFFICIAL_FEED) : posts;
+
+    for (const post of filteredPosts) {
+        if (isPostSeen(guildId, post.gid)) continue;
+
+        logger.info(`[${guildId}] Attempting to post: "${post.title}" [${post.gid}]`);
+        markPostSeen(guildId, post.gid); // mark first so failed sends don't retry forever
+
+        const description = stripHtml(post.contents).slice(0, 300);
+        const embed = new EmbedBuilder()
+            .setTitle(post.title)
+            .setDescription(description + '...')
+            .setFooter({ text: `By ${post.author}` })
+            .setTimestamp(post.date * 1000)
+            .setColor(0x00b4d8);
+
+        const url = encodePostUrl(post.url);
+        if (url) embed.setURL(url);
+
+        const imageUrl =
+            extractNewsImageUrl(post.contents) ?? (url ? await fetchNewsOgImageUrl(url) : null);
+        if (imageUrl) embed.setImage(imageUrl);
+
+        try {
+            const message = await channel.send({
+                ...(roleId ? { content: `<@&${roleId}>` } : {}),
+                embeds: [embed],
+            });
+            logger.info(`[${guildId}] Posted: "${post.title}" [${post.gid}]`);
+
+            if (post.feedname === OFFICIAL_FEED) {
+                const sections = splitIntoSections(post.contents);
+                const thread = await message.startThread({
+                    name: post.title.slice(0, 100),
+                    autoArchiveDuration: 1440, // 24 hours
+                });
+
+                for (const section of sections) {
+                    await thread.send(section);
+                }
+
+                logger.info(
+                    `[${guildId}] Created thread for: "${post.title}" with ${sections.length} section(s)`,
+                );
+            }
+        } catch (error) {
+            logger.error(`[${guildId}] Failed to post: "${post.title}" [${post.gid}]`, error);
+        }
+    }
+};
+
 export const poll = async (client: Client<true>): Promise<void> => {
     try {
         const posts = await fetchDeadlockNews();
 
+        // Each server on its own, so one server's error doesn't stop news for the rest.
         for (const guild of client.guilds.cache.values()) {
-            const channelID = getNewsChannel(guild.id);
-            if (!channelID) continue;
-
-            const channel =
-                client.channels.cache.get(channelID) ?? (await client.channels.fetch(channelID));
-            if (!(channel instanceof TextChannel)) continue;
-
-            const mode = getNewsMode(guild.id);
-            const roleId = getPingRole(guild.id);
-            const filteredPosts =
-                mode === 'official' ? posts.filter((p) => p.feedname === OFFICIAL_FEED) : posts;
-
-            for (const post of filteredPosts) {
-                if (isPostSeen(guild.id, post.gid)) continue;
-
-                logger.info(`[${guild.id}] Attempting to post: "${post.title}" [${post.gid}]`);
-                markPostSeen(guild.id, post.gid); // mark first so failed sends don't retry forever
-
-                const description = stripHtml(post.contents).slice(0, 300);
-                const embed = new EmbedBuilder()
-                    .setTitle(post.title)
-                    .setDescription(description + '...')
-                    .setFooter({ text: `By ${post.author}` })
-                    .setTimestamp(post.date * 1000)
-                    .setColor(0x00b4d8);
-
-                const url = encodePostUrl(post.url);
-                if (url) embed.setURL(url);
-
-                const imageUrl =
-                    extractNewsImageUrl(post.contents) ??
-                    (url ? await fetchNewsOgImageUrl(url) : null);
-                if (imageUrl) embed.setImage(imageUrl);
-
-                try {
-                    const message = await channel.send({
-                        ...(roleId ? { content: `<@&${roleId}>` } : {}),
-                        embeds: [embed],
-                    });
-                    logger.info(`[${guild.id}] Posted: "${post.title}" [${post.gid}]`);
-
-                    if (post.feedname === OFFICIAL_FEED) {
-                        const sections = splitIntoSections(post.contents);
-                        const thread = await message.startThread({
-                            name: post.title.slice(0, 100),
-                            autoArchiveDuration: 1440, // 24 hours
-                        });
-
-                        for (const section of sections) {
-                            await thread.send(section);
-                        }
-
-                        logger.info(
-                            `[${guild.id}] Created thread for: "${post.title}" with ${sections.length} section(s)`,
-                        );
-                    }
-                } catch (error) {
-                    logger.error(
-                        `[${guild.id}] Failed to post: "${post.title}" [${post.gid}]`,
-                        error,
-                    );
-                }
+            try {
+                await postNewsToGuild(client, guild.id, posts);
+            } catch (error) {
+                logger.error(`[${guild.id}] Failed to post news`, error);
             }
         }
     } catch (error) {
