@@ -1,5 +1,6 @@
-import { TextChannel } from 'discord.js';
+import { PermissionsBitField, TextChannel } from 'discord.js';
 import type { Client, EmbedBuilder, MessageCreateOptions } from 'discord.js';
+import { NEWS_PERMISSIONS } from '../../src/utils/newsPermissions.js';
 
 export interface SentMessage {
     channelId: string;
@@ -23,7 +24,11 @@ interface FakeChannelOptions {
     // Only fetched from the API, not in the client's cache.
     uncached?: boolean;
     failSend?: boolean;
+    // The bot's permissions in the channel. Every news permission by default.
+    permissions?: bigint;
 }
+
+const allNewsPermissions = NEWS_PERMISSIONS.reduce((all, [, flag]) => all | flag, 0n);
 
 // A client with the given servers and channels, recording every message the news poller sends.
 export const createNewsClient = (
@@ -36,6 +41,9 @@ export const createNewsClient = (
         if (options.text === false) return { id };
         return Object.assign(Object.create(TextChannel.prototype) as TextChannel, {
             id,
+            guild: { members: { me: { id: 'bot' } } },
+            permissionsFor: () =>
+                new PermissionsBitField(options.permissions ?? allNewsPermissions),
             send: async (message: MessageCreateOptions) => {
                 if (options.failSend) throw new Error('Missing Permissions');
                 const record: SentMessage = {

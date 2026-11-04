@@ -16,6 +16,7 @@ import {
     splitIntoSections,
     stripHtml,
 } from '../utils/formatUtils.js';
+import { missingNewsPermissions } from '../utils/newsPermissions.js';
 
 const fetchNewsChannel = async (
     client: Client<true>,
@@ -43,6 +44,14 @@ const postNewsToGuild = async (
 
     const channel = await fetchNewsChannel(client, guildId, channelID);
     if (!channel) return;
+
+    const missingPermissions = missingNewsPermissions(channel);
+    if (missingPermissions.length > 0) {
+        logger.warn(
+            `[${guildId}] Missing permissions in news channel ${channelID}: ${missingPermissions.join(', ')}`,
+        );
+        return;
+    }
 
     const mode = getNewsMode(guildId);
     const roleId = getPingRole(guildId);

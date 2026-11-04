@@ -9,6 +9,7 @@ import type { SteamNewsPost } from '../../src/utils/steamApi.js';
 import { captureConsole } from '../helpers/console.js';
 import { mockFetch } from '../helpers/fetch.js';
 import { createNewsClient } from '../helpers/newsClient.js';
+import { PermissionFlagsBits } from 'discord.js';
 
 const officialPost: SteamNewsPost = {
     gid: 'official-1',
@@ -267,6 +268,46 @@ describe('news poller', () => {
             /Could not fetch news channel deleted-channel: Unknown Channel/,
         );
         assert.deepEqual(output.error, []);
+    });
+
+    it('skips a server where the bot is missing permissions, without marking posts seen', async (t) => {
+        const output = captureConsole(t);
+        const [blocked, working] = [newGuild(), newGuild()];
+        setNewsChannel(blocked, 'channel-1');
+        setNewsChannel(working, 'channel-2');
+        const { client, sent } = createNewsClient([blocked, working], {
+            'channel-1': {
+                permissions: PermissionFlagsBits.ViewChannel | PermissionFlagsBits.SendMessages,
+            },
+            'channel-2': {},
+        });
+        mockNews(t, [officialPost]);
+
+        await poll(client);
+        assert.deepEqual(
+            sent.map(({ channelId }) => channelId),
+            ['channel-2'],
+        );
+        assert.equal(isPostSeen(blocked, officialPost.gid), false);
+        assert.match(
+            output.warn[0] ?? '',
+            /Missing permissions in news channel channel-1: Embed Links, Create Public Threads, Send Messages in Threads/,
+        );
+    });
+
+    it('posts what it skipped once the permissions are fixed', async (t) => {
+        captureConsole(t);
+        const guild = newGuild();
+        setNewsChannel(guild, 'channel-1');
+        mockNews(t, [officialPost]);
+
+        await poll(createNewsClient([guild], { 'channel-1': { permissions: 0n } }).client);
+        const { client, sent } = createNewsClient([guild], { 'channel-1': {} });
+        await poll(client);
+        assert.deepEqual(
+            sent.map(({ channelId }) => channelId),
+            ['channel-1'],
+        );
     });
 
     it('marks a post seen even when sending fails, and carries on', async (t) => {
