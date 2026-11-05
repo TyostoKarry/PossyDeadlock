@@ -168,7 +168,7 @@ describe('news poller', () => {
         });
     });
 
-    it('posts to an announcement channel, with the patch notes thread', async (t) => {
+    it('posts to an announcement channel and publishes the post, with the patch notes thread', async (t) => {
         captureConsole(t);
         const guild = newGuild();
         setNewsChannel(guild, 'channel-1');
@@ -179,7 +179,35 @@ describe('news poller', () => {
 
         await poll(client);
         assert.equal(sent.length, 1);
+        assert.equal(sent[0]?.published, true);
         assert.equal(sent[0]?.thread?.name, 'Gameplay Update');
+    });
+
+    it('does not publish posts in text channels', async (t) => {
+        captureConsole(t);
+        const guild = newGuild();
+        setNewsChannel(guild, 'channel-1');
+        const { client, sent } = createNewsClient([guild], { 'channel-1': {} });
+        mockNews(t, [officialPost]);
+
+        await poll(client);
+        assert.equal(sent[0]?.published, false);
+    });
+
+    it('warns when publishing fails, and still creates the thread', async (t) => {
+        const output = captureConsole(t);
+        const guild = newGuild();
+        setNewsChannel(guild, 'channel-1');
+        const { client, sent } = createNewsClient([guild], {
+            'channel-1': { announcement: true, failPublish: true },
+        });
+        mockNews(t, [officialPost]);
+
+        await poll(client);
+        assert.equal(sent[0]?.published, false);
+        assert.equal(sent[0]?.thread?.name, 'Gameplay Update');
+        assert.match(output.warn[0] ?? '', /Could not publish: "Gameplay Update"/);
+        assert.deepEqual(output.error, []);
     });
 
     it('cuts thread names to 100 characters', async (t) => {

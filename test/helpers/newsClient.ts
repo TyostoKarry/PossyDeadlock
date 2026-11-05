@@ -7,6 +7,7 @@ export interface SentMessage {
     content: string | undefined;
     embed: EmbedBuilder | undefined;
     thread: { name: string; messages: string[] } | undefined;
+    published: boolean;
 }
 
 export interface FakeNewsClient {
@@ -26,6 +27,8 @@ interface FakeChannelOptions {
     // Only fetched from the API, not in the client's cache.
     uncached?: boolean;
     failSend?: boolean;
+    // Publishing fails, like it does past Discord's limit of 10 per hour.
+    failPublish?: boolean;
     // The bot's permissions in the channel. Every news permission by default.
     permissions?: bigint;
 }
@@ -54,9 +57,14 @@ export const createNewsClient = (
                     content: message.content,
                     embed: message.embeds?.[0] as EmbedBuilder | undefined,
                     thread: undefined,
+                    published: false,
                 };
                 sent.push(record);
                 return {
+                    crosspost: async (): Promise<void> => {
+                        if (options.failPublish) throw new Error('Rate limited');
+                        record.published = true;
+                    },
                     startThread: async ({ name }: { name: string }): Promise<FakeThread> => {
                         record.thread = { name, messages: [] };
                         return {

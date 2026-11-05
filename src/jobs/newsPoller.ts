@@ -1,5 +1,5 @@
 import cron from 'node-cron';
-import { Client, EmbedBuilder } from 'discord.js';
+import { Client, EmbedBuilder, NewsChannel } from 'discord.js';
 import { fetchDeadlockNews, OFFICIAL_FEED, type SteamNewsPost } from '../utils/steamApi.js';
 import {
     getNewsChannel,
@@ -111,6 +111,19 @@ const postNewsToGuild = async (
                 embeds: [embed],
             });
             logger.info(`[${guildId}] Posted: "${post.title}" [${post.gid}]`);
+
+            // Publishing sends the post on to the servers following an announcement channel.
+            if (channel instanceof NewsChannel) {
+                try {
+                    await message.crosspost();
+                    logger.info(`[${guildId}] Published: "${post.title}" [${post.gid}]`);
+                } catch (error) {
+                    const reason = error instanceof Error ? error.message : String(error);
+                    logger.warn(
+                        `[${guildId}] Could not publish: "${post.title}" [${post.gid}]: ${reason}`,
+                    );
+                }
+            }
 
             if (post.feedname === OFFICIAL_FEED) {
                 const sections = splitIntoSections(post.contents);
