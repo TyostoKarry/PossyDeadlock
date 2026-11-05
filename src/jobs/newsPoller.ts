@@ -1,5 +1,5 @@
 import cron from 'node-cron';
-import { Client, EmbedBuilder, TextChannel } from 'discord.js';
+import { Client, EmbedBuilder, NewsChannel } from 'discord.js';
 import { fetchDeadlockNews, OFFICIAL_FEED, type SteamNewsPost } from '../utils/steamApi.js';
 import {
     getNewsChannel,
@@ -16,7 +16,11 @@ import {
     splitIntoSections,
     stripHtml,
 } from '../utils/formatUtils.js';
-import { missingNewsPermissions } from '../utils/newsPermissions.js';
+import {
+    isNewsPostChannel,
+    missingNewsPermissions,
+    type NewsPostChannel,
+} from '../utils/newsPermissions.js';
 import { forEachLimit } from '../utils/forEachLimit.js';
 
 // Each server being posted to adds about 1 request per second, against Discord's limit of 50.
@@ -26,11 +30,11 @@ const fetchNewsChannel = async (
     client: Client<true>,
     guildId: string,
     channelID: string,
-): Promise<TextChannel | null> => {
+): Promise<NewsPostChannel | null> => {
     try {
         const channel =
             client.channels.cache.get(channelID) ?? (await client.channels.fetch(channelID));
-        return channel instanceof TextChannel ? channel : null;
+        return isNewsPostChannel(channel) ? channel : null;
     } catch (error) {
         const reason = error instanceof Error ? error.message : String(error);
         logger.warn(`[${guildId}] Could not fetch news channel ${channelID}: ${reason}`);
@@ -107,6 +111,19 @@ const postNewsToGuild = async (
                 embeds: [embed],
             });
             logger.info(`[${guildId}] Posted: "${post.title}" [${post.gid}]`);
+
+            // Publishing sends the post on to the servers following an announcement channel.
+            if (channel instanceof NewsChannel) {
+                try {
+                    await message.crosspost();
+                    logger.info(`[${guildId}] Published: "${post.title}" [${post.gid}]`);
+                } catch (error) {
+                    const reason = error instanceof Error ? error.message : String(error);
+                    logger.warn(
+                        `[${guildId}] Could not publish: "${post.title}" [${post.gid}]: ${reason}`,
+                    );
+                }
+            }
 
             if (post.feedname === OFFICIAL_FEED) {
                 const sections = splitIntoSections(post.contents);

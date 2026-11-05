@@ -7,6 +7,7 @@ A Discord bot that automatically posts Deadlock news and patch notes to your ser
 - Automatic news polling every 5 minutes via Steam News API
 - Official only or all news modes
 - Full patch notes thread for official Valve posts
+- Post to a text or announcement channel; posts in announcement channels are published to following servers
 - Role ping on new posts
 - Simple slash command configuration
 - Hero stats, matchups/synergies, and a sortable hero list, backed by a daily-refreshed database from deadlock-api.com

@@ -1,4 +1,4 @@
-import { PermissionsBitField, TextChannel } from 'discord.js';
+import { NewsChannel, PermissionsBitField, TextChannel } from 'discord.js';
 import type { Client, EmbedBuilder, MessageCreateOptions } from 'discord.js';
 import { NEWS_PERMISSIONS } from '../../src/utils/newsPermissions.js';
 
@@ -7,6 +7,7 @@ export interface SentMessage {
     content: string | undefined;
     embed: EmbedBuilder | undefined;
     thread: { name: string; messages: string[] } | undefined;
+    published: boolean;
 }
 
 export interface FakeNewsClient {
@@ -21,9 +22,13 @@ interface FakeThread {
 interface FakeChannelOptions {
     // Channels that aren't text channels are skipped by the news poller.
     text?: boolean;
+    // An announcement channel instead of a text channel.
+    announcement?: boolean;
     // Only fetched from the API, not in the client's cache.
     uncached?: boolean;
     failSend?: boolean;
+    // Publishing fails, like it does past Discord's limit of 10 per hour.
+    failPublish?: boolean;
     // The bot's permissions in the channel. Every news permission by default.
     permissions?: bigint;
 }
@@ -39,7 +44,8 @@ export const createNewsClient = (
 
     const makeChannel = (id: string, options: FakeChannelOptions): unknown => {
         if (options.text === false) return { id };
-        return Object.assign(Object.create(TextChannel.prototype) as TextChannel, {
+        const prototype = options.announcement ? NewsChannel.prototype : TextChannel.prototype;
+        return Object.assign(Object.create(prototype) as NewsChannel | TextChannel, {
             id,
             guild: { members: { me: { id: 'bot' } } },
             permissionsFor: () =>
@@ -51,9 +57,14 @@ export const createNewsClient = (
                     content: message.content,
                     embed: message.embeds?.[0] as EmbedBuilder | undefined,
                     thread: undefined,
+                    published: false,
                 };
                 sent.push(record);
                 return {
+                    crosspost: async (): Promise<void> => {
+                        if (options.failPublish) throw new Error('Rate limited');
+                        record.published = true;
+                    },
                     startThread: async ({ name }: { name: string }): Promise<FakeThread> => {
                         record.thread = { name, messages: [] };
                         return {

@@ -29,12 +29,15 @@ Set the channel where Deadlock news will be posted.
 
 | Option | Required | Description |
 |---|---|---|
-| `channel` | No | The text channel to post news in. Leave empty to disable. |
+| `channel` | No | The text or announcement channel to post news in. Leave empty to disable. |
+
+In an announcement channel, each news post is also published, so servers that follow the channel get it too. The patch notes thread stays in your server; followers get the post with its link. If a ping role is set, the published copy keeps the role mention, which following servers see as an unknown role.
 
 The bot needs these permissions in the channel: **View Channel**, **Send Messages**, **Embed Links**, **Create Public Threads** and **Send Messages in Threads** (the last two for patch notes threads). A channel where any of them is missing is refused, and the reply lists what's missing. If permissions are removed later, the bot skips that server until they're fixed. No posts are lost: they go out once the bot can post again.
 
 **Examples:**
 - `/news set-channel #deadlock-news` — posts news to #deadlock-news
+- `/news set-channel #announcements` — posts news to an announcement channel and publishes it to following servers
 - `/news set-channel` — disables news posting, preserves other settings
 
 ---

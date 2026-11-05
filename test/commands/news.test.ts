@@ -2,7 +2,9 @@ import { describe, it } from 'node:test';
 import type { TestContext } from 'node:test';
 import assert from 'node:assert/strict';
 import {
+    ChannelType,
     MessageFlags,
+    NewsChannel,
     PermissionFlagsBits,
     PermissionsBitField,
     Role,
@@ -26,15 +28,25 @@ import { chatInput, embedOf, onlyResponse, payloadOf } from '../helpers/interact
 import type { CommandResponse } from '../helpers/interactions.js';
 import { allNewsPermissions } from '../helpers/newsClient.js';
 
-const textChannel = (id: string, permissions = allNewsPermissions): TextChannel =>
-    Object.assign(Object.create(TextChannel.prototype) as TextChannel, {
+const fakeChannel = <T extends TextChannel | NewsChannel>(
+    prototype: T,
+    id: string,
+    permissions: bigint,
+): T =>
+    Object.assign(Object.create(prototype) as T, {
         id,
         name: 'news',
         guild: { members: { me: { id: 'bot' } } },
         permissionsFor: () => new PermissionsBitField(permissions),
     });
 
-const guildWith = (channel: TextChannel): unknown => ({
+const textChannel = (id: string, permissions = allNewsPermissions): TextChannel =>
+    fakeChannel(TextChannel.prototype, id, permissions);
+
+const announcementChannel = (id: string, permissions = allNewsPermissions): NewsChannel =>
+    fakeChannel(NewsChannel.prototype, id, permissions);
+
+const guildWith = (channel: TextChannel | NewsChannel): unknown => ({
     channels: { cache: new Map([[channel.id, channel]]) },
 });
 
@@ -97,6 +109,20 @@ describe('/news', () => {
             PermissionFlagsBits.ManageGuild.toString(),
         );
     });
+
+    it('only offers text and announcement channels to pick as the news channel', () => {
+        const subcommands = news.data.toJSON().options as unknown as {
+            name: string;
+            options?: { name: string; channel_types?: number[] }[];
+        }[];
+        const channelOption = subcommands
+            .find((sub) => sub.name === 'set-channel')
+            ?.options?.find((option) => option.name === 'channel');
+        assert.deepEqual(channelOption?.channel_types, [
+            ChannelType.GuildText,
+            ChannelType.GuildAnnouncement,
+        ]);
+    });
 });
 
 describe('/news set-channel', () => {
@@ -112,6 +138,18 @@ describe('/news set-channel', () => {
         assert.equal(getNewsChannel(guild), 'c1');
         assert.equal(isPostSeen(guild, '1'), true);
         assert.equal(isPostSeen(guild, '2'), true);
+    });
+
+    it('accepts announcement channels', async (t) => {
+        captureConsole(t);
+        const guild = newGuild();
+        mockNews(t, []);
+
+        const content = privateReply(
+            await run(guild, 'set-channel', { channel: announcementChannel('a1') }),
+        );
+        assert.equal(content, 'Deadlock news will now be posted in <#a1>');
+        assert.equal(getNewsChannel(guild), 'a1');
     });
 
     it('only skips the feed the first time', async (t) => {
@@ -135,10 +173,10 @@ describe('/news set-channel', () => {
         assert.match(output.error[0] ?? '', /Failed to skip existing news feed/);
     });
 
-    it('refuses channels that are not text channels', async () => {
+    it('refuses channels that are not text or announcement channels', async () => {
         const guild = newGuild();
         const content = privateReply(await run(guild, 'set-channel', { channel: { id: 'voice' } }));
-        assert.equal(content, 'Please select a text channel.');
+        assert.equal(content, 'Please select a text or announcement channel.');
         assert.equal(getNewsChannel(guild), null);
     });
 
@@ -286,6 +324,16 @@ describe('/news config', () => {
             embedOf(response).fields?.[1]?.value,
             'Channel not found — use `/news set-channel` to pick another',
         );
+    });
+
+    it('checks permissions in an announcement channel too', async (t) => {
+        captureConsole(t);
+        const guild = newGuild();
+        setNewsChannel(guild, 'a1');
+        const response = onlyResponse(
+            await run(guild, 'config', { guild: guildWith(announcementChannel('a1')) }),
+        );
+        assert.equal(embedOf(response).fields?.[1]?.value, 'All set');
     });
 });
 

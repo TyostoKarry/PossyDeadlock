@@ -1,4 +1,4 @@
-import { ChatInputCommandInteraction, MessageFlags, TextChannel } from 'discord.js';
+import { ChatInputCommandInteraction, MessageFlags } from 'discord.js';
 import {
     clearNewsChannel,
     getNewsChannel,
@@ -7,7 +7,7 @@ import {
 } from '../../db/database.js';
 import { logger } from '../../utils/logger.js';
 import { fetchDeadlockNews } from '../../utils/steamApi.js';
-import { missingNewsPermissions } from '../../utils/newsPermissions.js';
+import { isNewsPostChannel, missingNewsPermissions } from '../../utils/newsPermissions.js';
 
 export const handleSetChannel = async (interaction: ChatInputCommandInteraction): Promise<void> => {
     const channel = interaction.options.getChannel('channel');
@@ -22,9 +22,9 @@ export const handleSetChannel = async (interaction: ChatInputCommandInteraction)
         return;
     }
 
-    if (!(channel instanceof TextChannel)) {
+    if (!isNewsPostChannel(channel)) {
         await interaction.reply({
-            content: 'Please select a text channel.',
+            content: 'Please select a text or announcement channel.',
             flags: MessageFlags.Ephemeral,
         });
         return;
