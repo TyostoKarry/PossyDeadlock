@@ -369,6 +369,47 @@ describe('news poller', () => {
         assert.match(output.error[0] ?? '', /News poller failed/);
     });
 
+    it('skips a poll while the previous one is still running', async (t) => {
+        const output = captureConsole(t);
+        const guild = newGuild();
+        setNewsChannel(guild, 'channel-1');
+        const { client, sent } = createNewsClient([guild], { 'channel-1': {} });
+        let release = (): void => {};
+        const steamResponds = new Promise<void>((resolve) => (release = resolve));
+        mockFetch(t, async (url) => {
+            if (!url.startsWith('https://api.steampowered.com/')) return new Response('');
+            await steamResponds;
+            return Response.json({ appnews: { newsitems: [officialPost] } });
+        });
+
+        const first = poll(client);
+        const second = poll(client);
+        release();
+        await Promise.all([first, second]);
+        assert.equal(sent.length, 1);
+        assert.match(output.warn[0] ?? '', /previous poll is still running/);
+    });
+
+    it('runs the next poll normally after one fails', async (t) => {
+        const output = captureConsole(t);
+        const guild = newGuild();
+        setNewsChannel(guild, 'channel-1');
+        const { client, sent } = createNewsClient([guild], { 'channel-1': {} });
+        let steamUp = false;
+        mockFetch(t, (url) => {
+            if (!url.startsWith('https://api.steampowered.com/')) return new Response('');
+            return steamUp
+                ? Response.json({ appnews: { newsitems: [officialPost] } })
+                : new Response('', { status: 503 });
+        });
+
+        await poll(client);
+        steamUp = true;
+        await poll(client);
+        assert.equal(sent.length, 1);
+        assert.deepEqual(output.warn, []);
+    });
+
     it('runs on startup and then every 5 minutes', (t) => {
         captureConsole(t);
         const { client } = createNewsClient([]);

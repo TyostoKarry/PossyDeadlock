@@ -129,7 +129,17 @@ const postNewsToGuild = async (
     }
 };
 
+// Set while a poll runs. A poll that starts before the previous one has finished is
+// skipped, instead of posting the same posts to the servers the first hasn't reached yet.
+let polling = false;
+
 export const poll = async (client: Client<true>): Promise<void> => {
+    if (polling) {
+        logger.warn('News poll skipped: the previous poll is still running');
+        return;
+    }
+    polling = true;
+
     try {
         const posts = await fetchDeadlockNews();
         const embeds: NewsEmbeds = new Map();
@@ -144,6 +154,8 @@ export const poll = async (client: Client<true>): Promise<void> => {
         });
     } catch (error) {
         logger.error('News poller failed', error);
+    } finally {
+        polling = false;
     }
 };
 
