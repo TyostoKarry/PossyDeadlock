@@ -2,6 +2,7 @@ import { ChatInputCommandInteraction, MessageFlags, Role } from 'discord.js';
 import { getNewsChannel, setPingRole } from '../../db/database.js';
 import { logger } from '../../utils/logger.js';
 import { pingRoleMention } from '../../utils/formatUtils.js';
+import { canMentionEveryone, isNewsPostChannel } from '../../utils/newsPermissions.js';
 
 export const handleSetPingRole = async (
     interaction: ChatInputCommandInteraction,
@@ -33,6 +34,17 @@ export const handleSetPingRole = async (
             flags: MessageFlags.Ephemeral,
         });
         return;
+    }
+
+    if (role.id === interaction.guildId) {
+        const channel = interaction.guild?.channels.cache.get(channelId);
+        if (!isNewsPostChannel(channel) || !canMentionEveryone(channel)) {
+            await interaction.reply({
+                content: `The bot can't ping @everyone in <#${channelId}>. It's missing this permission there: Mention Everyone.`,
+                flags: MessageFlags.Ephemeral,
+            });
+            return;
+        }
     }
 
     setPingRole(interaction.guildId!, role.id);

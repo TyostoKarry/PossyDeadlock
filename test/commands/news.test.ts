@@ -283,6 +283,21 @@ describe('/news set-ping-role', () => {
         );
         assert.equal(getPingRole(guild), null);
     });
+
+    it('refuses @everyone when the bot can not mention everyone in the news channel', async () => {
+        const guild = newGuild();
+        setNewsChannel(guild, 'c1');
+        assert.equal(
+            privateReply(
+                await run(guild, 'set-ping-role', {
+                    role: role(guild),
+                    guild: guildWith(textChannel('c1')),
+                }),
+            ),
+            "The bot can't ping @everyone in <#c1>. It's missing this permission there: Mention Everyone.",
+        );
+        assert.equal(getPingRole(guild), null);
+    });
 });
 
 describe('/news config', () => {
@@ -357,6 +372,17 @@ describe('/news config', () => {
         setPingRole(guild, guild);
         const fields = embedOf(onlyResponse(await run(guild, 'config'))).fields;
         assert.equal(fields?.find(({ name }) => name === 'Ping Role')?.value, '@everyone');
+    });
+
+    it('reports a missing Mention Everyone permission when the ping role is @everyone', async (t) => {
+        captureConsole(t);
+        const guild = newGuild();
+        setNewsChannel(guild, 'c1');
+        setPingRole(guild, guild);
+        const response = onlyResponse(
+            await run(guild, 'config', { guild: guildWith(textChannel('c1')) }),
+        );
+        assert.equal(embedOf(response).fields?.[1]?.value, 'Missing: Mention Everyone');
     });
 });
 
