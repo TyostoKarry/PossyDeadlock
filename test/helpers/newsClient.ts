@@ -1,4 +1,4 @@
-import { PermissionsBitField, TextChannel } from 'discord.js';
+import { NewsChannel, PermissionsBitField, TextChannel } from 'discord.js';
 import type { Client, EmbedBuilder, MessageCreateOptions } from 'discord.js';
 import { NEWS_PERMISSIONS } from '../../src/utils/newsPermissions.js';
 
@@ -21,6 +21,8 @@ interface FakeThread {
 interface FakeChannelOptions {
     // Channels that aren't text channels are skipped by the news poller.
     text?: boolean;
+    // An announcement channel instead of a text channel.
+    announcement?: boolean;
     // Only fetched from the API, not in the client's cache.
     uncached?: boolean;
     failSend?: boolean;
@@ -39,7 +41,8 @@ export const createNewsClient = (
 
     const makeChannel = (id: string, options: FakeChannelOptions): unknown => {
         if (options.text === false) return { id };
-        return Object.assign(Object.create(TextChannel.prototype) as TextChannel, {
+        const prototype = options.announcement ? NewsChannel.prototype : TextChannel.prototype;
+        return Object.assign(Object.create(prototype) as NewsChannel | TextChannel, {
             id,
             guild: { members: { me: { id: 'bot' } } },
             permissionsFor: () =>

@@ -168,6 +168,20 @@ describe('news poller', () => {
         });
     });
 
+    it('posts to an announcement channel, with the patch notes thread', async (t) => {
+        captureConsole(t);
+        const guild = newGuild();
+        setNewsChannel(guild, 'channel-1');
+        const { client, sent } = createNewsClient([guild], {
+            'channel-1': { announcement: true },
+        });
+        mockNews(t, [officialPost]);
+
+        await poll(client);
+        assert.equal(sent.length, 1);
+        assert.equal(sent[0]?.thread?.name, 'Gameplay Update');
+    });
+
     it('cuts thread names to 100 characters', async (t) => {
         captureConsole(t);
         const guild = newGuild();
