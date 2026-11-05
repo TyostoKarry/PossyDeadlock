@@ -66,8 +66,11 @@ Set a role to ping when new Deadlock news is posted.
 |---|---|---|
 | `role` | No | The role to ping. Leave empty to clear. |
 
+`@everyone` works too, but needs the bot to have the **Mention Everyone** permission in the news channel. Without it, the command refuses `@everyone` and says so, and `/news config` lists Mention Everyone as missing.
+
 **Examples:**
 - `/news set-ping-role @Deadlock News` — pings that role on new posts
+- `/news set-ping-role @everyone` — pings everyone on new posts
 - `/news set-ping-role` — clears the ping role
 
 ---

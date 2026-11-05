@@ -23,3 +23,10 @@ export const missingNewsPermissions = (channel: NewsPostChannel): string[] => {
     const permissions = me ? channel.permissionsFor(me) : null;
     return NEWS_PERMISSIONS.filter(([, flag]) => !permissions?.has(flag)).map(([name]) => name);
 };
+
+// Whether the bot may ping @everyone in the channel. Only needed when @everyone is the ping
+// role, so it's not one of the permissions every news channel needs.
+export const canMentionEveryone = (channel: NewsPostChannel): boolean => {
+    const me = channel.guild.members.me;
+    return me !== null && channel.permissionsFor(me).has(PermissionFlagsBits.MentionEveryone);
+};

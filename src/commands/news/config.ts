@@ -1,17 +1,26 @@
 import { ChatInputCommandInteraction, EmbedBuilder, MessageFlags } from 'discord.js';
 import { getNewsChannel, getNewsMode, getPingRole } from '../../db/database.js';
 import { logger } from '../../utils/logger.js';
-import { isNewsPostChannel, missingNewsPermissions } from '../../utils/newsPermissions.js';
+import {
+    canMentionEveryone,
+    isNewsPostChannel,
+    missingNewsPermissions,
+} from '../../utils/newsPermissions.js';
+import { pingRoleMention } from '../../utils/formatUtils.js';
 
 const describePermissions = (
     interaction: ChatInputCommandInteraction,
     channelId: string,
+    roleId: string | null,
 ): string => {
     const channel = interaction.guild?.channels.cache.get(channelId);
     if (!isNewsPostChannel(channel)) {
         return 'Channel not found — use `/news set-channel` to pick another';
     }
     const missingPermissions = missingNewsPermissions(channel);
+    if (roleId === interaction.guildId && !canMentionEveryone(channel)) {
+        missingPermissions.push('Mention Everyone');
+    }
     return missingPermissions.length > 0 ? `Missing: ${missingPermissions.join(', ')}` : 'All set';
 };
 
@@ -34,7 +43,7 @@ export const handleConfig = async (interaction: ChatInputCommandInteraction): Pr
                 ? [
                       {
                           name: 'Permissions',
-                          value: describePermissions(interaction, channelId),
+                          value: describePermissions(interaction, channelId, roleId),
                           inline: false,
                       },
                   ]
@@ -49,7 +58,7 @@ export const handleConfig = async (interaction: ChatInputCommandInteraction): Pr
             },
             {
                 name: 'Ping Role',
-                value: roleId ? `<@&${roleId}>` : 'None',
+                value: roleId ? pingRoleMention(roleId, guildId) : 'None',
                 inline: false,
             },
         );

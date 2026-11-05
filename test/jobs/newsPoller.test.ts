@@ -267,6 +267,18 @@ describe('news poller', () => {
         assert.equal(sent[1]?.content, undefined);
     });
 
+    it('pings @everyone as plain text when the ping role is @everyone', async (t) => {
+        captureConsole(t);
+        const guild = newGuild();
+        setNewsChannel(guild, 'channel-1');
+        setPingRole(guild, guild);
+        const { client, sent } = createNewsClient([guild], { 'channel-1': {} });
+        mockNews(t, [officialPost]);
+
+        await poll(client);
+        assert.equal(sent[0]?.content, '@everyone');
+    });
+
     it('fetches the channel when it is not cached', async (t) => {
         captureConsole(t);
         const guild = newGuild();

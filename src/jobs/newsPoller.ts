@@ -13,6 +13,7 @@ import {
     encodePostUrl,
     extractNewsImageUrl,
     fetchNewsOgImageUrl,
+    pingRoleMention,
     splitIntoSections,
     stripHtml,
 } from '../utils/formatUtils.js';
@@ -107,7 +108,7 @@ const postNewsToGuild = async (
 
         try {
             const message = await channel.send({
-                ...(roleId ? { content: `<@&${roleId}>` } : {}),
+                ...(roleId ? { content: pingRoleMention(roleId, guildId) } : {}),
                 embeds: [embed],
             });
             logger.info(`[${guildId}] Posted: "${post.title}" [${post.gid}]`);
