@@ -141,6 +141,19 @@ describe('news poller', () => {
         assert.equal(sent[0]?.embed?.toJSON().image, undefined);
     });
 
+    it("fetches a post's page once, however many servers get it", async (t) => {
+        captureConsole(t);
+        const [a, b] = [newGuild(), newGuild()];
+        setNewsChannel(a, 'channel-a');
+        setNewsChannel(b, 'channel-b');
+        const { client, sent } = createNewsClient([a, b], { 'channel-a': {}, 'channel-b': {} });
+        const pages = mockNews(t, [officialPost]);
+
+        await poll(client);
+        assert.equal(sent.length, 2);
+        assert.deepEqual(pages, [officialPost.url]);
+    });
+
     it('posts the full patch notes in a thread, one message per section', async (t) => {
         captureConsole(t);
         const guild = newGuild();

@@ -34,10 +34,41 @@ const fetchNewsChannel = async (
     }
 };
 
+const buildNewsEmbed = async (post: SteamNewsPost): Promise<EmbedBuilder> => {
+    const description = stripHtml(post.contents).slice(0, 300);
+    const embed = new EmbedBuilder()
+        .setTitle(post.title)
+        .setDescription(description + '...')
+        .setFooter({ text: `By ${post.author}` })
+        .setTimestamp(post.date * 1000)
+        .setColor(0x00b4d8);
+
+    const url = encodePostUrl(post.url);
+    if (url) embed.setURL(url);
+
+    const imageUrl =
+        extractNewsImageUrl(post.contents) ?? (url ? await fetchNewsOgImageUrl(url) : null);
+    if (imageUrl) embed.setImage(imageUrl);
+
+    return embed;
+};
+
+type NewsEmbeds = Map<string, Promise<EmbedBuilder>>;
+
+const getNewsEmbed = (embeds: NewsEmbeds, post: SteamNewsPost): Promise<EmbedBuilder> => {
+    let embed = embeds.get(post.gid);
+    if (!embed) {
+        embed = buildNewsEmbed(post);
+        embeds.set(post.gid, embed);
+    }
+    return embed;
+};
+
 const postNewsToGuild = async (
     client: Client<true>,
     guildId: string,
     posts: SteamNewsPost[],
+    embeds: NewsEmbeds,
 ): Promise<void> => {
     const channelID = getNewsChannel(guildId);
     if (!channelID) return;
@@ -64,20 +95,7 @@ const postNewsToGuild = async (
         logger.info(`[${guildId}] Attempting to post: "${post.title}" [${post.gid}]`);
         markPostSeen(guildId, post.gid); // mark first so failed sends don't retry forever
 
-        const description = stripHtml(post.contents).slice(0, 300);
-        const embed = new EmbedBuilder()
-            .setTitle(post.title)
-            .setDescription(description + '...')
-            .setFooter({ text: `By ${post.author}` })
-            .setTimestamp(post.date * 1000)
-            .setColor(0x00b4d8);
-
-        const url = encodePostUrl(post.url);
-        if (url) embed.setURL(url);
-
-        const imageUrl =
-            extractNewsImageUrl(post.contents) ?? (url ? await fetchNewsOgImageUrl(url) : null);
-        if (imageUrl) embed.setImage(imageUrl);
+        const embed = await getNewsEmbed(embeds, post);
 
         try {
             const message = await channel.send({
@@ -110,11 +128,12 @@ const postNewsToGuild = async (
 export const poll = async (client: Client<true>): Promise<void> => {
     try {
         const posts = await fetchDeadlockNews();
+        const embeds: NewsEmbeds = new Map();
 
         // Each server on its own, so one server's error doesn't stop news for the rest.
         for (const guild of client.guilds.cache.values()) {
             try {
-                await postNewsToGuild(client, guild.id, posts);
+                await postNewsToGuild(client, guild.id, posts, embeds);
             } catch (error) {
                 logger.error(`[${guild.id}] Failed to post news`, error);
             }
