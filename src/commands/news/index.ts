@@ -1,4 +1,9 @@
-import { ChatInputCommandInteraction, PermissionFlagsBits, SlashCommandBuilder } from 'discord.js';
+import {
+    ChannelType,
+    ChatInputCommandInteraction,
+    PermissionFlagsBits,
+    SlashCommandBuilder,
+} from 'discord.js';
 import { handleSetChannel } from './setChannel.js';
 import { handleSetMode } from './setMode.js';
 import { handleSetPingRole } from './setPingRole.js';
@@ -18,6 +23,7 @@ export default {
                     option
                         .setName('channel')
                         .setDescription('The channel to post news in — leave empty to disable')
+                        .addChannelTypes(ChannelType.GuildText, ChannelType.GuildAnnouncement)
                         .setRequired(false),
                 ),
         )

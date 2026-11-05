@@ -2,6 +2,7 @@ import { describe, it } from 'node:test';
 import type { TestContext } from 'node:test';
 import assert from 'node:assert/strict';
 import {
+    ChannelType,
     MessageFlags,
     NewsChannel,
     PermissionFlagsBits,
@@ -107,6 +108,20 @@ describe('/news', () => {
             news.data.toJSON().default_member_permissions,
             PermissionFlagsBits.ManageGuild.toString(),
         );
+    });
+
+    it('only offers text and announcement channels to pick as the news channel', () => {
+        const subcommands = news.data.toJSON().options as unknown as {
+            name: string;
+            options?: { name: string; channel_types?: number[] }[];
+        }[];
+        const channelOption = subcommands
+            .find((sub) => sub.name === 'set-channel')
+            ?.options?.find((option) => option.name === 'channel');
+        assert.deepEqual(channelOption?.channel_types, [
+            ChannelType.GuildText,
+            ChannelType.GuildAnnouncement,
+        ]);
     });
 });
 
