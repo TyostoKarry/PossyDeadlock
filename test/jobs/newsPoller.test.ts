@@ -141,6 +141,19 @@ describe('news poller', () => {
         assert.equal(sent[0]?.embed?.toJSON().image, undefined);
     });
 
+    it("fetches a post's page once, however many servers get it", async (t) => {
+        captureConsole(t);
+        const [a, b] = [newGuild(), newGuild()];
+        setNewsChannel(a, 'channel-a');
+        setNewsChannel(b, 'channel-b');
+        const { client, sent } = createNewsClient([a, b], { 'channel-a': {}, 'channel-b': {} });
+        const pages = mockNews(t, [officialPost]);
+
+        await poll(client);
+        assert.equal(sent.length, 2);
+        assert.deepEqual(pages, [officialPost.url]);
+    });
+
     it('posts the full patch notes in a thread, one message per section', async (t) => {
         captureConsole(t);
         const guild = newGuild();
@@ -255,6 +268,20 @@ describe('news poller', () => {
         assert.equal(isPostSeen(working, officialPost.gid), true);
     });
 
+    it('posts to every server when there are more servers than it posts to at once', async (t) => {
+        captureConsole(t);
+        const guilds = Array.from({ length: 12 }, () => newGuild());
+        guilds.forEach((guild, i) => setNewsChannel(guild, `channel-${i}`));
+        const { client, sent } = createNewsClient(
+            guilds,
+            Object.fromEntries(guilds.map((_, i) => [`channel-${i}`, {}])),
+        );
+        mockNews(t, [officialPost]);
+
+        await poll(client);
+        assert.equal(sent.length, 12);
+    });
+
     it('warns about a news channel that can not be fetched', async (t) => {
         const output = captureConsole(t);
         const guild = newGuild();
@@ -340,6 +367,47 @@ describe('news poller', () => {
         await assert.doesNotReject(poll(client));
         assert.deepEqual(sent, []);
         assert.match(output.error[0] ?? '', /News poller failed/);
+    });
+
+    it('skips a poll while the previous one is still running', async (t) => {
+        const output = captureConsole(t);
+        const guild = newGuild();
+        setNewsChannel(guild, 'channel-1');
+        const { client, sent } = createNewsClient([guild], { 'channel-1': {} });
+        let release = (): void => {};
+        const steamResponds = new Promise<void>((resolve) => (release = resolve));
+        mockFetch(t, async (url) => {
+            if (!url.startsWith('https://api.steampowered.com/')) return new Response('');
+            await steamResponds;
+            return Response.json({ appnews: { newsitems: [officialPost] } });
+        });
+
+        const first = poll(client);
+        const second = poll(client);
+        release();
+        await Promise.all([first, second]);
+        assert.equal(sent.length, 1);
+        assert.match(output.warn[0] ?? '', /previous poll is still running/);
+    });
+
+    it('runs the next poll normally after one fails', async (t) => {
+        const output = captureConsole(t);
+        const guild = newGuild();
+        setNewsChannel(guild, 'channel-1');
+        const { client, sent } = createNewsClient([guild], { 'channel-1': {} });
+        let steamUp = false;
+        mockFetch(t, (url) => {
+            if (!url.startsWith('https://api.steampowered.com/')) return new Response('');
+            return steamUp
+                ? Response.json({ appnews: { newsitems: [officialPost] } })
+                : new Response('', { status: 503 });
+        });
+
+        await poll(client);
+        steamUp = true;
+        await poll(client);
+        assert.equal(sent.length, 1);
+        assert.deepEqual(output.warn, []);
     });
 
     it('runs on startup and then every 5 minutes', (t) => {
