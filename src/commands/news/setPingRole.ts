@@ -1,6 +1,7 @@
 import { ChatInputCommandInteraction, MessageFlags, Role } from 'discord.js';
 import { getNewsChannel, setPingRole } from '../../db/database.js';
 import { logger } from '../../utils/logger.js';
+import { pingRoleMention } from '../../utils/formatUtils.js';
 
 export const handleSetPingRole = async (
     interaction: ChatInputCommandInteraction,
@@ -38,7 +39,7 @@ export const handleSetPingRole = async (
     logger.info(`[${interaction.guildId}] ${interaction.user.tag} set ping role to @${role.name}`);
 
     await interaction.reply({
-        content: `<@&${role.id}> will now be pinged when new Deadlock news is posted.`,
+        content: `${pingRoleMention(role.id, interaction.guildId!)} will now be pinged when new Deadlock news is posted.`,
         flags: MessageFlags.Ephemeral,
     });
 };

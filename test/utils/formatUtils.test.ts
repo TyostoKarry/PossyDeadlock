@@ -5,6 +5,7 @@ import {
     extractNewsImageUrl,
     fetchNewsOgImageUrl,
     formatRelativeTime,
+    pingRoleMention,
     splitIntoSections,
     stripHtml,
 } from '../../src/utils/formatUtils.js';
@@ -162,5 +163,15 @@ describe('formatRelativeTime', () => {
         for (const [seconds, expected] of cases) {
             assert.equal(formatRelativeTime(secondsAgo(seconds)), expected, `${seconds}s`);
         }
+    });
+});
+
+describe('pingRoleMention', () => {
+    it('mentions a role by its ID', () => {
+        assert.equal(pingRoleMention('r1', 'g1'), '<@&r1>');
+    });
+
+    it('uses @everyone for the @everyone role, which has the server ID', () => {
+        assert.equal(pingRoleMention('g1', 'g1'), '@everyone');
     });
 });

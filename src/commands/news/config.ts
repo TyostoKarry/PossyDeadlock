@@ -2,6 +2,7 @@ import { ChatInputCommandInteraction, EmbedBuilder, MessageFlags } from 'discord
 import { getNewsChannel, getNewsMode, getPingRole } from '../../db/database.js';
 import { logger } from '../../utils/logger.js';
 import { isNewsPostChannel, missingNewsPermissions } from '../../utils/newsPermissions.js';
+import { pingRoleMention } from '../../utils/formatUtils.js';
 
 const describePermissions = (
     interaction: ChatInputCommandInteraction,
@@ -49,7 +50,7 @@ export const handleConfig = async (interaction: ChatInputCommandInteraction): Pr
             },
             {
                 name: 'Ping Role',
-                value: roleId ? `<@&${roleId}>` : 'None',
+                value: roleId ? pingRoleMention(roleId, guildId) : 'None',
                 inline: false,
             },
         );

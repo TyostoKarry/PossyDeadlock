@@ -251,6 +251,20 @@ describe('/news set-ping-role', () => {
         assert.equal(getPingRole(guild), null);
     });
 
+    it('accepts @everyone and replies with it as plain text', async (t) => {
+        captureConsole(t);
+        const guild = newGuild();
+        setNewsChannel(guild, 'c1');
+        const channel = textChannel('c1', allNewsPermissions | PermissionFlagsBits.MentionEveryone);
+        assert.equal(
+            privateReply(
+                await run(guild, 'set-ping-role', { role: role(guild), guild: guildWith(channel) }),
+            ),
+            '@everyone will now be pinged when new Deadlock news is posted.',
+        );
+        assert.equal(getPingRole(guild), guild);
+    });
+
     it('refuses something that is not a role', async () => {
         const guild = newGuild();
         setNewsChannel(guild, 'c1');
@@ -334,6 +348,15 @@ describe('/news config', () => {
             await run(guild, 'config', { guild: guildWith(announcementChannel('a1')) }),
         );
         assert.equal(embedOf(response).fields?.[1]?.value, 'All set');
+    });
+
+    it('shows @everyone as the ping role', async (t) => {
+        captureConsole(t);
+        const guild = newGuild();
+        setNewsChannel(guild, 'c1');
+        setPingRole(guild, guild);
+        const fields = embedOf(onlyResponse(await run(guild, 'config'))).fields;
+        assert.equal(fields?.find(({ name }) => name === 'Ping Role')?.value, '@everyone');
     });
 });
 
