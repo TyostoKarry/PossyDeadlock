@@ -268,6 +268,20 @@ describe('news poller', () => {
         assert.equal(isPostSeen(working, officialPost.gid), true);
     });
 
+    it('posts to every server when there are more servers than it posts to at once', async (t) => {
+        captureConsole(t);
+        const guilds = Array.from({ length: 12 }, () => newGuild());
+        guilds.forEach((guild, i) => setNewsChannel(guild, `channel-${i}`));
+        const { client, sent } = createNewsClient(
+            guilds,
+            Object.fromEntries(guilds.map((_, i) => [`channel-${i}`, {}])),
+        );
+        mockNews(t, [officialPost]);
+
+        await poll(client);
+        assert.equal(sent.length, 12);
+    });
+
     it('warns about a news channel that can not be fetched', async (t) => {
         const output = captureConsole(t);
         const guild = newGuild();

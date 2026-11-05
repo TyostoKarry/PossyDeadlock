@@ -17,6 +17,10 @@ import {
     stripHtml,
 } from '../utils/formatUtils.js';
 import { missingNewsPermissions } from '../utils/newsPermissions.js';
+import { forEachLimit } from '../utils/forEachLimit.js';
+
+// Each server being posted to adds about 1 request per second, against Discord's limit of 50.
+const MAX_PARALLEL_GUILDS = 10;
 
 const fetchNewsChannel = async (
     client: Client<true>,
@@ -131,13 +135,13 @@ export const poll = async (client: Client<true>): Promise<void> => {
         const embeds: NewsEmbeds = new Map();
 
         // Each server on its own, so one server's error doesn't stop news for the rest.
-        for (const guild of client.guilds.cache.values()) {
+        await forEachLimit(client.guilds.cache.values(), MAX_PARALLEL_GUILDS, async (guild) => {
             try {
                 await postNewsToGuild(client, guild.id, posts, embeds);
             } catch (error) {
                 logger.error(`[${guild.id}] Failed to post news`, error);
             }
-        }
+        });
     } catch (error) {
         logger.error('News poller failed', error);
     }
