@@ -7,6 +7,7 @@ import {
     getPingRole,
     isPostSeen,
     markPostSeen,
+    pruneSeenPosts,
 } from '../db/database.js';
 import { logger } from '../utils/logger.js';
 import {
@@ -160,6 +161,7 @@ export const poll = async (client: Client<true>): Promise<void> => {
 
     try {
         const posts = await fetchDeadlockNews();
+        pruneSeenPosts(posts.map((post) => post.gid));
         const embeds: NewsEmbeds = new Map();
 
         // Each server on its own, so one server's error doesn't stop news for the rest.
