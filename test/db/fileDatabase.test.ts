@@ -31,18 +31,31 @@ describe('the database file', () => {
         );
     });
 
-    it('prunes seen posts older than 30 days', () => {
-        database.markPostSeen('guild-1', 'old');
-        database.markPostSeen('guild-1', 'recent');
+    const backdate = (postId: string, age: string): void => {
         direct
             .prepare("UPDATE seen_posts SET seen_at = datetime('now', ?) WHERE post_id = ?")
-            .run('-31 days', 'old');
-        direct
-            .prepare("UPDATE seen_posts SET seen_at = datetime('now', ?) WHERE post_id = ?")
-            .run('-29 days', 'recent');
+            .run(age, postId);
+    };
 
-        database.pruneSeenPosts();
-        assert.equal(database.isPostSeen('guild-1', 'old'), false);
+    it('prunes seen posts older than 30 days that are no longer in the feed', () => {
+        database.markPostSeen('guild-1', 'old-gone');
+        database.markPostSeen('guild-1', 'old-in-feed');
+        database.markPostSeen('guild-1', 'recent');
+        backdate('old-gone', '-31 days');
+        backdate('old-in-feed', '-31 days');
+        backdate('recent', '-29 days');
+
+        database.pruneSeenPosts(['old-in-feed', 'something-else']);
+        assert.equal(database.isPostSeen('guild-1', 'old-gone'), false);
+        assert.equal(database.isPostSeen('guild-1', 'old-in-feed'), true);
         assert.equal(database.isPostSeen('guild-1', 'recent'), true);
+    });
+
+    it('prunes nothing when the feed is empty', () => {
+        database.markPostSeen('guild-2', 'old');
+        backdate('old', '-31 days');
+
+        database.pruneSeenPosts([]);
+        assert.equal(database.isPostSeen('guild-2', 'old'), true);
     });
 });

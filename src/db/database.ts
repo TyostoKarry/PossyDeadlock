@@ -42,12 +42,18 @@ export const runMigrations = (target: DatabaseSync, allMigrations: readonly stri
     }
 };
 
-export const pruneSeenPosts = (): void => {
-    db.exec(`DELETE FROM seen_posts WHERE seen_at < datetime('now', '-30 days')`);
+// Removes seen posts older than 30 days that are no longer in the news feed. A post still in
+// the feed keeps its row however old it is, otherwise it would be posted again.
+export const pruneSeenPosts = (feedPostIds: readonly string[]): void => {
+    if (feedPostIds.length === 0) return;
+    db.prepare(
+        `DELETE FROM seen_posts
+         WHERE seen_at < datetime('now', '-30 days')
+           AND post_id NOT IN (SELECT value FROM json_each(?))`,
+    ).run(JSON.stringify(feedPostIds));
 };
 
 runMigrations(db, migrations);
-pruneSeenPosts();
 
 export const runInTransaction = <T>(fn: () => T): T => {
     db.exec('BEGIN');
