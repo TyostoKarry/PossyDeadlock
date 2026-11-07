@@ -14,7 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `/steam` commands for linking your Steam account to your Discord account: `link` (by account ID, SteamID64, or profile link), `unlink`, `show`, and `list-linked` to see which members of the server have linked. All replies are only visible to you.
 - A short-lived cache for live deadlock-api lookups. Repeated lookups will be served from memory instead of calling the API again. Adds the `lru-cache` dependency.
 - Tests for the existing code with Node's built-in test runner (`npm test`), plus a `typecheck` script. CI now runs both on every pull request.
-- News can be posted in announcement channels. Posts there are published, so servers that follow the channel get them too. `/news set-channel` now only offers text and announcement channels to pick from.
+- News can be posted in announcement channels. Posts there are published, so servers that follow the channel get them too. Past Discord's limit of 10 publishes per channel per hour, posts still go out in your server but stay unpublished. `/news set-channel` now only offers text and announcement channels to pick from.
 
 ### Changed
 
