@@ -206,7 +206,10 @@ describe('news poller', () => {
         await poll(client);
         assert.equal(sent[0]?.published, false);
         assert.equal(sent[0]?.thread?.name, 'Gameplay Update');
-        assert.match(output.warn[0] ?? '', /Could not publish: "Gameplay Update"/);
+        assert.match(
+            output.warn[0] ?? '',
+            /Could not publish: "Gameplay Update" \[official-1\]: RateLimitError\[\/channels\/:id\/messages\/:id\/crosspost\]/,
+        );
         assert.deepEqual(output.error, []);
     });
 
