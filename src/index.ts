@@ -2,8 +2,12 @@ import { Client, Collection, Events, GatewayIntentBits } from 'discord.js';
 import { commands } from './commands/index.js';
 import { handleInteraction } from './interactions.js';
 import { logger } from './utils/logger.js';
+import { REJECT_ON_RATE_LIMIT } from './utils/rateLimits.js';
 
-const client = new Client({ intents: [GatewayIntentBits.Guilds] });
+const client = new Client({
+    intents: [GatewayIntentBits.Guilds],
+    rest: { rejectOnRateLimit: REJECT_ON_RATE_LIMIT },
+});
 const commandsByName = new Collection(commands.map((command) => [command.data.name, command]));
 
 client.on(Events.InteractionCreate, (interaction) =>

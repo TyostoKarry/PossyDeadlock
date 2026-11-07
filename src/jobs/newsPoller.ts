@@ -120,7 +120,8 @@ const postNewsToGuild = async (
                     await message.crosspost();
                     logger.info(`[${guildId}] Published: "${post.title}" [${post.gid}]`);
                 } catch (error) {
-                    const reason = error instanceof Error ? error.message : String(error);
+                    const reason =
+                        error instanceof Error ? error.message || error.name : String(error);
                     logger.warn(
                         `[${guildId}] Could not publish: "${post.title}" [${post.gid}]: ${reason}`,
                     );

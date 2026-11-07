@@ -1,4 +1,4 @@
-import { NewsChannel, PermissionsBitField, TextChannel } from 'discord.js';
+import { NewsChannel, PermissionsBitField, RateLimitError, TextChannel } from 'discord.js';
 import type { Client, EmbedBuilder, MessageCreateOptions } from 'discord.js';
 import { NEWS_PERMISSIONS } from '../../src/utils/newsPermissions.js';
 
@@ -27,7 +27,7 @@ interface FakeChannelOptions {
     // Only fetched from the API, not in the client's cache.
     uncached?: boolean;
     failSend?: boolean;
-    // Publishing fails, like it does past Discord's limit of 10 per hour.
+    // Publishing fails with discord.js's RateLimitError, as past Discord's limit of 10 per hour.
     failPublish?: boolean;
     // The bot's permissions in the channel. Every news permission by default.
     permissions?: bigint;
@@ -62,7 +62,21 @@ export const createNewsClient = (
                 sent.push(record);
                 return {
                     crosspost: async (): Promise<void> => {
-                        if (options.failPublish) throw new Error('Rate limited');
+                        if (options.failPublish) {
+                            throw new RateLimitError({
+                                timeToReset: 3_600_000,
+                                limit: 10,
+                                method: 'POST',
+                                hash: 'publish',
+                                url: 'https://discord.com/api/v10/channels/1/messages/2/crosspost',
+                                route: '/channels/:id/messages/:id/crosspost',
+                                majorParameter: '1',
+                                global: false,
+                                retryAfter: 3_600_000,
+                                sublimitTimeout: 0,
+                                scope: 'user',
+                            });
+                        }
                         record.published = true;
                     },
                     startThread: async ({ name }: { name: string }): Promise<FakeThread> => {
